@@ -23,3 +23,8 @@ Formato: `## YYYY-MM-DD — Título` + Contexto / Decisão / Consequência.
 - Contexto: `Unity -createProject` falha (PackageManager ausente).
 - Decisão: criar `game/Assets/`, `game/Packages/manifest.json` mínimo, `game/ProjectSettings/ProjectVersion.txt` (6000.6.2f1) à mão; commit local `f9081f4`.
 - Consequência: ao reparar o Editor, abrir `game/` e rodar bootstrap; GitHub push pendente de `gh auth login`.
+
+## 2026-09-20 — Editor novo também com UPM corrompido + repo GitHub criado
+- Contexto: usuário reinstalou → `6000.6.2f1-x86_64` tem UPM (96MB, legível, hash OK) mas Windows recusa execução (erro 1392) até em cópia no Temp; sem Mark-of-Web; só Windows Defender ativo, sem detecção Unity. Install antigo sem o exe, novo com exe corrompido = causa fora do Unity.
+- Decisão: parar de sondar sem admin; remediation no lado do usuário (exclusão Defender + reinstall limpo). Repo `guiolv/crew-journal` público criado e com push (main).
+- Consequência: bootstrap da cena + build Windows ficam para quando o Editor abrir; comandos prontos no README.

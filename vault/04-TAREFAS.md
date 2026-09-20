@@ -1,8 +1,8 @@
 # 04 — Tarefas
 
 ## Em progresso
-- [ ] Reparar Unity 6000.6.2f1 via Hub (reinstalar — falta UnityPackageManager.exe)
-- [ ] `gh auth login` + `gh repo create crew-journal --public --source=. --push`
+- [ ] Unity AINDA bloqueado: `UnityPackageManager.exe` do install novo não executa (erro 1392, até via cópia em Temp; sem Zone.Identifier; Defender sem detecção Unity) — causa fora do Unity (AV/disco). Usuário: exclusão no Defender (admin) + reinstalar limpo
+- [x] `gh auth login` + repo criado: https://github.com/guiolv/crew-journal (push main OK)
 
 ## Backlog
 - [ ] Abrir `game/` no Editor reparado → rodar `CrewJournal.Editor.V1Bootstrap.Build` via CLI
