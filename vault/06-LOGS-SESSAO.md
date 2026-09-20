@@ -26,3 +26,8 @@
 - Voyage.cs + TravelEvents + BattleState + ShipModules + Progression + FinishBattle; GameManager/UI reescritos no fluxo detalhe→viagem→evento→chegada→combate; tema navy+pergaminho.
 - Verificação: LogicTests 24/24 (console), V1Playtest no engine 13/13 (recruta, módulo, viagem+evento, trade, missão, turnos, save/load, memorial), build Windows refeito, smoke limpo.
 - Critério técnico TDD-35: 12/12. Gaps honestos pós-MVP: 5 tipos de evento (GDD ~10), 1 habilidade genérica, bio 1 linha, clima só em viagem. Multiplayer fora (pós-MVP por definição).
+
+## 2026-09-20 — ses_f441bb278ffeK6WjqT2ncewDl3 — UI v3 (screenshot mostrava tudo colapsado)
+- Causa: conteúdo sem layout groups (RectTransforms zerados, tudo empilhado no centro; só a barra inferior renderizava).
+- Reescrita: ScrollRect+Viewport+Content(VerticalLayoutGroup+CSF), botões min 52-72px fontes 17-24, mapa com pins posicionados pelas coords do mundo, barra de progresso de viagem, Menu separado (Salvar/Carregar/Novo), trade em linhas, ações de combate em fileira.
+- Build 01:46 + smoke limpo, push 59db8d3. Aguardando screenshot do usuário para confirmar jogabilidade.
