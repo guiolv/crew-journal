@@ -26,4 +26,5 @@ Dois mockups "Sail & Survive" — identidade: navy profundo (#0A1628) + pergamin
 - [x] Renderers pixel-art estilo único (Portrait/Island/Ship + Pixel.cs)
 - [x] Retratos em recrutas/equipe/combate/ficha; ilha nas telas ilha/detalhe; navio na tela navio
 - [x] Cicatriz adquirida em batalha (visual evolui com história)
+- [x] Arte verificada a olho via export PNG (preview/ + big_): retratos legíveis, estilo consistente
 - [ ] Biblioteca externa via PNG (Resources + fallback procedural) — contrato pronto, assets pendentes

@@ -24,6 +24,7 @@ namespace CrewJournal.Editor
                 tr.Add("corajoso");
                 Texture2D t = PortraitRenderer.Render(4242, "char_" + i, jobs[i], tr, i == 4, 0);
                 File.WriteAllBytes(dir + "/portrait_" + jobs[i] + ".png", t.EncodeToPNG());
+                File.WriteAllBytes(dir + "/big_portrait_" + jobs[i] + ".png", Scale4(t).EncodeToPNG());
             }
             for (int e = 0; e < 3; e++)
             {
@@ -45,6 +46,22 @@ namespace CrewJournal.Editor
                 File.WriteAllBytes(dir + "/ship_" + ships[i] + ".png", t.EncodeToPNG());
             }
             Debug.Log("[V1VisualExport] PNGs em " + dir);
+        }
+
+        static Texture2D Scale4(Texture2D t)
+        {
+            int W = t.width * 4, H = t.height * 4;
+            Texture2D o = new Texture2D(W, H, TextureFormat.RGBA32, false);
+            o.filterMode = FilterMode.Point;
+            for (int y = 0; y < H; y++)
+            {
+                for (int x = 0; x < W; x++)
+                {
+                    o.SetPixel(x, y, t.GetPixel(x / 4, y / 4));
+                }
+            }
+            o.Apply();
+            return o;
         }
     }
 #endif

@@ -31,3 +31,8 @@
 - Causa: conteúdo sem layout groups (RectTransforms zerados, tudo empilhado no centro; só a barra inferior renderizava).
 - Reescrita: ScrollRect+Viewport+Content(VerticalLayoutGroup+CSF), botões min 52-72px fontes 17-24, mapa com pins posicionados pelas coords do mundo, barra de progresso de viagem, Menu separado (Salvar/Carregar/Novo), trade em linhas, ações de combate em fileira.
 - Build 01:46 + smoke limpo, push 59db8d3. Aguardando screenshot do usuário para confirmar jogabilidade.
+
+## 2026-09-20 — ses_f441bb278ffeK6WjqT2ncewDl3 — v0.3 visual procedural entregue
+- Proposta do usuário implementada: DNA puro + gramáticas de arquétipo + renderers pixel-art em estilo único + GDD-31/TDD-36 no vault.
+- Verificação: lógica 30/30, playtest engine 13/13, type-check Unity 0 erros, build refeito, smoke limpo, arte conferida a olho via PNG exportado (retratos/ilhas/navios legíveis e consistentes).
+- Cicatriz adquirida em batalha implementada (visual evolui com história). Contrato p/ biblioteca externa PNG definido, assets pendentes.

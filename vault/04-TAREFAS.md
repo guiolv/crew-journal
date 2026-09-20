@@ -1,7 +1,7 @@
 # 04 — Tarefas
 
 ## Em progresso
-- [ ] Visual procedural modular (sessão atual): DNA + gramáticas + renderers + retratos/ilhas/navios na UI; GDD-31 + TDD-36 já escritos
+- [ ] Playtest manual do loop completo no `Build/crew-journal.exe` (usuário) — build atual já tem visuais v0.3
 
 ## Backlog
 - [ ] 5 eventos marítimos → ~10 (GDD fala ~10; hoje: tempestade, abandonado, desconhecido, criatura, calmaria)
@@ -18,3 +18,5 @@
 - [x] 2026-09-20 — Unity reparado (reinstall limpo, UPM v9.31.1) + repo https://github.com/guiolv/crew-journal
 - [x] 2026-09-20 — v0.1 jogável: manifest uGUI 2.6.0, cena World via CLI, build Windows OK, smoke test sem exceptions
 - [x] 2026-09-20 — v0.2 refs: Voyage em etapas + clima, eventos com 3 escolhas, BattleState por turnos, módulos, XP/nível, tema navy+pergaminho; lógica 24/24, playtest engine 13/13, build + smoke limpos
+- [x] 2026-09-20 — UI v3 jogável: scroll + layout groups, mapa posicionado, botões grandes (push 59db8d3)
+- [x] 2026-09-20 — v0.3 visual procedural: DNA + gramáticas + 3 renderers + integração UI + GDD-31/TDD-36; lógica 30/30, playtest 13/13, arte verificada a olho via PNG
