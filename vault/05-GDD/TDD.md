@@ -818,3 +818,19 @@ O protótipo estará tecnicamente pronto quando:
 * o save puder ser carregado.
 
 Multiplayer não faz parte do critério.
+
+---
+
+# 36. Visual procedural modular
+
+```text
+Visual
+├── Dna (puro: CharacterVisual, IslandVisual, ShipVisual)
+├── Grammar (zonas por arquetipo, distribuicoes por profissao)
+├── Render (Unity: PortraitRenderer, IslandRenderer, ShipRenderer -> Texture2D)
+└── Cache (por id; texturas 32-96px, point filter)
+```
+
+Contrato: DNA é função pura de `(worldSeed, id)` — nunca serializado, sempre idêntico. Estado visual mutável mínimo e serializado: `CharacterData.scar`, `CharacterData.outfitMod` (0 = profissão, cicatriz adquirida em batalha). Renderers desggiados por `IPartSource`: hoje procedural por código; amanhã PNGs `hair_12.png` etc. via Resources com fallback procedural — sem mudar chamadas.
+
+Retratos 40x48 em grade fixa (cabeca y30-42, corpo y16-30). Ilhas 96x64 (silhueta + bioma + peças por zona). Navios 64x40 (casco/mastro/vela por defId+seed).

@@ -231,6 +231,7 @@ namespace CrewJournal.Logic
                 int reward = 60 + danger * 40;
                 d.AddResource(ResourceId.Money, reward);
                 d.notoriety += 20 + danger * 5;
+                Random scarr = new Random(d.world.seed + d.world.day * 131);
                 for (int i = 0; i < party.Count; i++)
                 {
                     if (party[i].alive)
@@ -238,6 +239,11 @@ namespace CrewJournal.Logic
                         party[i].kills++;
                         int ups = Progression.AddXp(party[i], 25);
                         if (ups > 0) out_ += party[i].displayName + " subiu para o nivel " + party[i].level + "!\n";
+                        if (!party[i].scar && scarr.NextDouble() < 0.15)
+                        {
+                            party[i].scar = true;
+                            out_ += party[i].displayName + " ganhou uma cicatriz.\n";
+                        }
                     }
                 }
                 for (int i = 0; i < d.missions.Count; i++)

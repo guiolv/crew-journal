@@ -13,10 +13,17 @@ Dois mockups "Sail & Survive" — identidade: navy profundo (#0A1628) + pergamin
 8. Diário (tabs: todos/viagens/missões/combate/recrutamento/mortes/descobertas) + Memorial + Missões (objetivos, recompensa, risco, aceitar)
 
 ## Gap v0.1 → refs (virou escopo v0.2, esta sessão)
-- [ ] Preview de viagem + clima determinístico
-- [ ] Eventos com 3 escolhas (GDD 10) em vez de auto-resolução
-- [ ] Combate interativo por turnos (ações por ator) em vez de simulação em bloco
-- [ ] Módulos do navio compráveis com efeito (GDD 22)
-- [ ] XP/nível por função (GED 15-16)
-- [ ] Tema navy+pergaminho na UI
+- [x] Preview de viagem + clima determinístico
+- [x] Eventos com 3 escolhas (GDD 10) em vez de auto-resolução
+- [x] Combate interativo por turnos (ações por ator) em vez de simulação em bloco
+- [x] Módulos do navio compráveis com efeito (GDD 22)
+- [x] XP/nível por função (GED 15-16)
+- [x] Tema navy+pergaminho na UI
 - Ficha/relações/história: parcial (gerador já dá traits/jobs; relações só afinidade/confiança; história = 1 linha gerada)
+
+## v0.3 visual procedural (sessão atual)
+- [x] DNA personagem/ilhas/navios (VisualDNA.cs) + testes
+- [x] Renderers pixel-art estilo único (Portrait/Island/Ship + Pixel.cs)
+- [x] Retratos em recrutas/equipe/combate/ficha; ilha nas telas ilha/detalhe; navio na tela navio
+- [x] Cicatriz adquirida em batalha (visual evolui com história)
+- [ ] Biblioteca externa via PNG (Resources + fallback procedural) — contrato pronto, assets pendentes

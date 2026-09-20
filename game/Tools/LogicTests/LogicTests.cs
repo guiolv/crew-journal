@@ -181,6 +181,40 @@ public static class LogicTests
         int ups = Progression.AddXp(cx, 250);
         Check(ups >= 1 && cx.level >= 2, "xp-levelup");
 
+        // 16. DNA visual deterministico
+        List<string> traits = new List<string>();
+        traits.Add("corajoso");
+        CharacterVisual va = VisualDNA.Character(42, "char_7", "Medico", traits, false, 0);
+        CharacterVisual vb = VisualDNA.Character(42, "char_7", "Medico", traits, false, 0);
+        Check(va.hair == vb.hair && va.outfit == vb.outfit && va.face == vb.face, "dna-deterministic");
+        CharacterVisual vc = VisualDNA.Character(43, "char_7", "Medico", traits, false, 0);
+        Check(va.hair != vc.hair || va.face != vc.face || va.skinTone != vc.skinTone, "dna-varies");
+
+        // 17. Distribuicao por profissao (medico tende a oculos)
+        int glasses = 0;
+        for (int i = 0; i < 20; i++)
+        {
+            CharacterVisual m = VisualDNA.Character(1000 + i, "char_" + i, "Medico", traits, false, 0);
+            if (m.accessory == 3) glasses++;
+        }
+        Check(glasses >= 5, "dna-job-distribution");
+
+        // 18. Gramatica de ilha: capital tem castelo, perigosa tem boss
+        IslandVisual cap = VisualDNA.Island(9, "isl_2", IslandArchetype.Capital);
+        IslandVisual dan = VisualDNA.Island(9, "isl_4", IslandArchetype.Dangerous);
+        bool hasCastle = false, hasBoss = false;
+        for (int i = 0; i < cap.pieces.Count; i++) if (cap.pieces[i].kind == "castle") hasCastle = true;
+        for (int i = 0; i < dan.pieces.Count; i++) if (dan.pieces[i].kind == "boss") hasBoss = true;
+        Check(hasCastle && hasBoss, "island-grammar");
+        IslandVisual cap2 = VisualDNA.Island(9, "isl_2", IslandArchetype.Capital);
+        Check(cap.pieces.Count == cap2.pieces.Count && cap.biome == cap2.biome, "island-deterministic");
+
+        // 19. DNA de navio por def
+        ShipVisual sboat = VisualDNA.Ship("boat", 5, 0);
+        ShipVisual smed = VisualDNA.Ship("medium", 5, 0);
+        ShipVisual sbar = VisualDNA.Ship("barrel", 5, 0);
+        Check(sboat.masts == 1 && smed.masts == 2 && sbar.masts == 0, "ship-dna");
+
         Console.WriteLine("----");
         Console.WriteLine("pass=" + pass + " fail=" + fail);
         return fail == 0 ? 0 : 1;

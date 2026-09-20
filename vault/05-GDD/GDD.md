@@ -700,3 +700,33 @@ O jogador deve terminar uma sessão de aproximadamente 30 minutos pensando:
 > **"Quero continuar navegando para descobrir o que vai acontecer."**
 
 Esse é o principal indicador de sucesso do MVP.
+
+---
+
+# 31. Visual procedural modular (v0.3)
+
+A IA **não** roda dentro do jogo. Ela produz a biblioteca; o Unity monta via seed.
+
+## 31.1 Princípio
+
+> **Regras + arquétipo + seed — nunca randomização pura.**
+
+Todo visual segue o mesmo estilo: mesma perspectiva, iluminação, proporção, paleta, traço e pontos de encaixe.
+
+## 31.2 Ilhas
+
+Biblioteca: terrenos (areia, grama, floresta, montanha, penhasco, vulcão, pântano, rocha, praia), construções (casa, taverna, mercado, porto, igreja, prisão, torre, armazém, moinho), elementos (árvores, pedras, barcos, docas, estradas, plantações, pontes, ruínas, tesouros).
+
+Geração em 3 etapas: **forma** (máscara + erosão → praias/falésias/montanhas/rios) → **bioma** (temperatura+umidade+altitude) → **personalidade** (gramática do arquétipo: vila pesqueira = porto→mercado→casas→plantações→floresta; capital = castelo→praça→mercado/igreja/governo→porto→subúrbio; perigosa = praia→floresta→ruínas→caverna→boss).
+
+## 31.3 Personagens
+
+Camadas: corpo, rosto, cabelo, barba, roupa (por profissão), acessórios, arma — montadas no mesmo rig. DNA procedural (seed → sempre o mesmo visual; save/load preserva). Distribuição por profissão (médico tende a jaleco/óculos; pirata a bandana/cicatriz) sem regra absoluta. O visual evolui com a história: cicatriz após batalha, roupa acompanha função.
+
+## 31.4 Navios
+
+Casco + mastro + vela + canhões + decoração + figura de proa, combinados por seed/definição.
+
+## 31.5 Biblioteca inicial do MVP
+
+Ilhas: 5 arquétipos, ~30 terrenos, ~40 construções, ~50 props. Personagens: 8 corpos, 12 rostos, 15 cabelos, 15 roupas, 20 acessórios, 10 armas. Milhares de combinações; a biblioteca cresce sem alterar o sistema.

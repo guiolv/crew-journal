@@ -193,6 +193,7 @@ public class GameUI : MonoBehaviour
         MkCardText(card, "Clima: " + GameSession.WeatherName(gm.PreviewWeather), 17);
         MkCardText(card, string.Format("Tempo: {0} dias   Risco: {1}%   Eventos: ate ~{2}%", gm.Preview.days, (int)(gm.Preview.risk * 100), (int)(gm.Preview.eventChance * 100)), 17);
         MkCardText(card, string.Format("Consumo: {0} comida / {1} agua   (voce tem {2} / {3})", needFood, needWater, d.GetResource(ResourceId.Food), d.GetResource(ResourceId.Water)), 17);
+        PortraitImage(content, 210, 140, IslandRenderer.Render(d.world.seed, to.id, to.archetype));
         string id = to.id;
         MkBigButton("INICIAR VIAGEM — " + gm.Preview.days + " dias", delegate { screen = "island"; gm.BeginVoyage(id); });
         MkButton("Voltar ao mapa", 52, delegate { screen = "map"; Refresh(); });
@@ -250,6 +251,7 @@ public class GameUI : MonoBehaviour
         GameObject card = MkCard();
         MkCardText(card, isl.displayName + "  [" + isl.archetype + "]", 22);
         MkCardText(card, "Perigo " + isl.danger + "   Reputacao: " + RepName(d.GetRep(isl.id)) + " (" + d.GetRep(isl.id) + ")", 17);
+        PortraitImage(content, 210, 140, IslandRenderer.Render(d.world.seed, isl.id, isl.archetype));
         MkHeader("Comercio");
         ResourceId[] ids = new ResourceId[] { ResourceId.Food, ResourceId.Water, ResourceId.Wood, ResourceId.Metal, ResourceId.Medicine };
         for (int i = 0; i < ids.Length; i++)
@@ -277,7 +279,8 @@ public class GameUI : MonoBehaviour
             shown++;
             string job = c.jobs.Count > 0 ? c.jobs[0] : "?";
             string id = c.id;
-            MkButton(string.Format("{0}  [{1} nv{2}]  nav:{3} lut:{4}  —  {5}$", c.displayName, job, c.level, c.nav, c.fighter, c.hireCost), 56, delegate
+            Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod);
+            PortraitButton(string.Format("{0}  [{1} nv{2}]  nav:{3} lut:{4}  —  {5}$", c.displayName, job, c.level, c.nav, c.fighter, c.hireCost), tex, delegate
             {
                 string m; GameSession.Recruit(d, id, out m); msg = m; Refresh();
             });
@@ -307,6 +310,7 @@ public class GameUI : MonoBehaviour
         MkCardText(card, string.Format("Trip max {0}   Carga max {1}   Vel {2}   Modulos {3}/{4}",
             ShipModules.EffectiveCrewCap(d.ship), ShipModules.EffectiveCargoCap(d.ship), d.ship.speed,
             ShipModules.UsedSlots(d.ship), d.ship.modules), 17);
+        PortraitImage(content, 240, 150, ShipRenderer.Render(d.ship.defId, d.world.seed, ShipModules.CountOf(d.ship, "special")));
         MkButton("Reparar casco", 56, delegate
         {
             string m; GameSession.Repair(d, out m); msg = m; Refresh();
@@ -347,7 +351,8 @@ public class GameUI : MonoBehaviour
             if (!c.alive) continue;
             string job = c.jobs.Count > 0 ? c.jobs[0] : "?";
             string id = c.id;
-            MkButton(string.Format("{0}  [{1}]  nv{2}  HP {3}/{4}", c.displayName, job, c.level, c.stats.hp, c.stats.maxHp), 60, delegate
+            Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod);
+            PortraitButton(string.Format("{0}  [{1}]  nv{2}  HP {3}/{4}", c.displayName, job, c.level, c.stats.hp, c.stats.maxHp), tex, delegate
             {
                 selChar = id;
                 screen = "sheet";
@@ -363,6 +368,7 @@ public class GameUI : MonoBehaviour
         string job = c.jobs.Count > 0 ? c.jobs[0] : "?";
         GameObject card = MkCard();
         MkCardText(card, c.displayName + " — " + job, 22);
+        PortraitImage(content, 140, 168, PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod));
         MkCardText(card, string.Format("Nivel {0}   XP {1}/{2}   HP {3}/{4}", c.level, c.xp, Progression.XpForLevel(c.level), c.stats.hp, c.stats.maxHp), 17);
         MkCardText(card, string.Format("ATK {0}  DEF {1}  VEL {2}   Moral {3}  Lealdade {4}  Salario {5}$/d",
             c.stats.atk, c.stats.def, c.stats.speed, c.morale, c.loyalty, c.wage), 17);
@@ -399,11 +405,14 @@ public class GameUI : MonoBehaviour
             if (e.hp <= 0) continue;
             int idx = i;
             string mark = idx == selTarget ? ">> " : "";
-            MkButton(mark + e.name + "   HP " + e.hp + "/" + e.maxHp, 56, delegate { selTarget = idx; Refresh(); });
+            Texture2D etex = PortraitRenderer.RenderEnemy(d.world.seed, EnemyIndex(e.name), i);
+            PortraitButton(mark + e.name + "   HP " + e.hp + "/" + e.maxHp, etex, delegate { selTarget = idx; Refresh(); });
         }
         CharacterData cur = b.CurrentCrew();
         if (cur != null)
         {
+            string cjob = cur.jobs.Count > 0 ? cur.jobs[0] : "?";
+            PortraitImage(content, 80, 96, PortraitRenderer.Render(d.world.seed, cur.id, cjob, cur.traits, cur.scar, cur.outfitMod));
             GameObject c2 = MkCard();
             MkCardText(c2, "Vez de " + cur.displayName + "  (HP " + cur.stats.hp + "/" + cur.stats.maxHp + ")", 19);
         }
@@ -696,6 +705,61 @@ public class GameUI : MonoBehaviour
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = new Vector2(w, h);
         MkBtnText(go, label, 14);
+    }
+
+    void PortraitImage(Transform parent, float w, float h, Texture tex)
+    {
+        GameObject holder = new GameObject("Portrait");
+        holder.transform.SetParent(parent, false);
+        LayoutElement le = holder.AddComponent<LayoutElement>();
+        le.minHeight = h + 8;
+        le.preferredHeight = h + 8;
+        GameObject go = new GameObject("Img");
+        go.transform.SetParent(holder.transform, false);
+        Image img = go.AddComponent<Image>();
+        img.sprite = Sprite.Create((Texture2D)tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(w, h);
+    }
+
+    void PortraitButton(string label, Texture tex, Action onClick)
+    {
+        GameObject row = new GameObject("PRow");
+        row.transform.SetParent(content, false);
+        HorizontalLayoutGroup hg = row.AddComponent<HorizontalLayoutGroup>();
+        hg.spacing = 8;
+        hg.childControlWidth = true;
+        hg.childForceExpandHeight = false;
+        LayoutElement rle = row.AddComponent<LayoutElement>();
+        rle.minHeight = 64;
+        rle.preferredHeight = 64;
+        GameObject go = new GameObject("PImg");
+        go.transform.SetParent(row.transform, false);
+        Image img = go.AddComponent<Image>();
+        img.sprite = Sprite.Create((Texture2D)tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+        LayoutElement le = go.AddComponent<LayoutElement>();
+        le.minWidth = 56;
+        le.minHeight = 56;
+        le.preferredWidth = 56;
+        le.preferredHeight = 56;
+        GameObject b = MkBtnBase(row.transform, 60, Teal);
+        LayoutElement bl = b.GetComponent<LayoutElement>();
+        bl.flexibleWidth = 1;
+        b.GetComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
+        MkBtnText(b, label, 18);
+    }
+
+    int EnemyIndex(string name)
+    {
+        string[] pool = new string[] { "Saqueador", "Arraia Gigante", "Corsario", "Sirena Hostil", "Golem de Coral" };
+        for (int i = 0; i < pool.Length; i++)
+        {
+            if (name.StartsWith(pool[i])) return i;
+        }
+        return 0;
     }
 
     void Rect(GameObject go, float ax0, float ay0, float ax1, float ay1, float ox0, float oy0, float ox1, float oy1)

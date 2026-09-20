@@ -1,7 +1,7 @@
 # 04 — Tarefas
 
 ## Em progresso
-- [ ] UI v3 jogável (sessão atual): scroll + layout groups, mapa posicionado, botões grandes, Menu separado — build em curso, falta screenshot do usuário confirmando
+- [ ] Visual procedural modular (sessão atual): DNA + gramáticas + renderers + retratos/ilhas/navios na UI; GDD-31 + TDD-36 já escritos
 
 ## Backlog
 - [ ] 5 eventos marítimos → ~10 (GDD fala ~10; hoje: tempestade, abandonado, desconhecido, criatura, calmaria)

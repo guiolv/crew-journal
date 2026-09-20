@@ -57,6 +57,8 @@ namespace CrewJournal.Logic
         [DataMember] public int morale;
         [DataMember] public int loyalty;
         [DataMember] public int xp;
+        [DataMember] public bool scar;
+        [DataMember] public int outfitMod;
         [DataMember] public int battles;
         [DataMember] public int kills;
         [DataMember] public int hireCost;
