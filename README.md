@@ -24,7 +24,8 @@ Ou via CLI:
 
 ## Build Windows
 ```powershell
-& "C:\Program Files\Unity\Hub\Editor\6000.6.2f1\Editor\Unity.exe" -batchmode -nographics -quit -projectPath ./game -executeMethod CrewJournal.Editor.V1Build.BuildWindows -logFile ./unity-build.log
+& "<editor>/Unity.exe" -batchmode -nographics -quit -projectPath ./game -executeMethod CrewJournal.Editor.V1Build.BuildWindows -logFile ./unity-build.log
+# saída: ./Build/crew-journal.exe (não commitado — gitignored)
 ```
 
 ## Save

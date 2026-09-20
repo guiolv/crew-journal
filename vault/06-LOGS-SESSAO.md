@@ -15,3 +15,9 @@
 - Repo https://github.com/guiolv/crew-journal criado (público) + push main OK (2 commits → remote).
 - Bootstrap com install novo (`6000.6.2f1-x86_64`) falhou igual: UPM não executa (1392). Evidências: arquivo legível+hash OK, cópia em Temp também não executa, sem Zone.Identifier, só Defender ativo sem detecção Unity.
 - Vault atualizado; aguardando usuário corrigir ambiente (exclusão Defender admin + reinstall) para rodar bootstrap + build.
+
+## 2026-09-20 — ses_f441bb278ffeK6WjqT2ncewDl3 — v0.1 jogável verificada
+- Usuário refez install (Hub aninha em `6000.6.2f1/6000.6.2f1-x86_64/`); UPM v9.31.1 executa; Editor abre o projeto.
+- Achado real: `UnityEngine.UI` não existia — faltava `com.unity.ugui@2.6.0` no manifest (built-in, resolve local). Adicionado, compilação limpa.
+- `V1Bootstrap.Build` via CLI criou `Assets/_Project/Scenes/World.unity`; `V1Build.BuildWindows` gerou `<repo>/Build/crew-journal.exe`.
+- Smoke test: exe vivo 15s+, Player.log sem exceptions/erros. Push em dia (c4b5907 no remote).

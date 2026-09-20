@@ -4,7 +4,7 @@
 - Trabalhar em um game a partir de um GDD fornecido pelo usuário.
 - Implementar usando Unity CLI de forma incremental e verificável.
 
-Status: GDD/TDD/GED recebidos. Scaffold v0.1 criado e commitado (f9081f4). Lógica verificada 12/12. Build jogável BLOQUEADO: instalação Unity corrompida (falta UnityPackageManager.exe).
+Status: v0.1 JOGÁVEL e verificada em 2026-09-20 — scena World via CLI, build Windows em `Build/crew-journal.exe`, exe abre e roda 15s+ sem exceptions. GDD/TDD/GED como base.
 
 ## /loop
 Loop de trabalho esperado:

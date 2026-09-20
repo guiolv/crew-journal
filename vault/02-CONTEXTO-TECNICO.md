@@ -33,6 +33,8 @@ OPENCODE/
 - Engine DLLs: `.../Editor/Data/Managed/UnityEngine/` (CoreModule, UIModule, TextRenderingModule)
 - ATENÇÃO 2026-09-20: instalação corrompida — falta `Data/Resources/PackageManager/Server/UnityPackageManager.exe` e módulos SceneManagement. `-createProject` falha. Projeto foi montado manualmente (Assets/Packages/ProjectSettings). Reparar via Unity Hub (reinstalar 6000.6.2f1) antes de abrir/compilar no Editor.
 - Verificação sem Editor: `game/Tools/LogicTests/` (12 testes, csc Framework) + `game/Tools/CompileCheck/` (Roslyn + stubs uGUI, CHECK-A/B=0).
+- Pacote uGUI: `com.unity.ugui@2.6.0` (built-in, resolve local sem rede) — obrigatório no manifest, sem ele `UnityEngine.UI` não existe.
+- Build Windows: `V1Build` grava em `<repo>/Build/crew-journal.exe` (dataPath + `/../../Build`). Smoke test 2026-09-20: exe abre, vivo 15s+, Player.log sem exceptions.
 
 Padrões esperados (confirmar):
 - `Unity -batchmode -nographics -projectPath ./game -executeMethod <Classe.Metodo> -quit -logFile -`
