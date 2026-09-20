@@ -27,7 +27,7 @@ OPENCODE/
 ```
 
 ## Unity CLI — verificar antes de usar
-- Editor: `C:\Program Files\Unity\Hub\Editor\6000.6.2f1\Editor\Unity.exe` (versão 6000.6.2f1 confirmada via `-version`)
+- Editor: `C:\Program Files\Unity\Hub\Editor\6000.6.2f1\6000.6.2f1-x86_64\Editor\Unity.exe` (versão 6000.6.2f1, UPM v9.31.1 OK desde 2026-09-20; Hub aninha installs em subpastas)
 - Roslyn moderno: `.../Editor/Data/DotNetSdk/dotnet.exe` + `sdk/8.0.318/Roslyn/bincore/csc.dll`
 - Ref netstandard: `.../Data/DotNetSdk/packs/NETStandard.Library.Ref/2.1.0/ref/netstandard2.1/netstandard.dll`
 - Engine DLLs: `.../Editor/Data/Managed/UnityEngine/` (CoreModule, UIModule, TextRenderingModule)
