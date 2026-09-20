@@ -1,7 +1,7 @@
-// CrewJournal — ponte Unity <-> logica pura. MonoBehaviour singleton.
-// Cena unica (World). UI em GameUI assina OnChanged.
+// CrewJournal — ponte Unity <-> logica pura. Fluxo: detalhe -> viagem -> evento -> chegada -> combate.
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using CrewJournal.Logic;
 
@@ -11,11 +11,17 @@ public class GameManager : MonoBehaviour
 
     public GameData Data;
     public GameState State = GameState.Boot;
-    public TravelReport LastReport;
-    public string LastBattleText = "";
-    public bool PendingCombat;
-    public int PendingCombatDanger;
     public int Seed = 12345;
+
+    public string PreviewDest = "";
+    public TravelResult Preview;
+    public WeatherKind PreviewWeather;
+
+    public BattleState Battle;
+    public int PendingCombatDanger;
+    public string EventChoiceText = "";
+    public string LastBattleText = "";
+    public VoyageReport LastVoyage;
 
     public event Action OnChanged;
 
@@ -45,57 +51,141 @@ public class GameManager : MonoBehaviour
         Seed = seed;
         Data = GameSession.NewGame(seed);
         State = GameState.Map;
-        PendingCombat = false;
-        LastReport = null;
+        Battle = null;
+        Preview = null;
+        PreviewDest = "";
+        EventChoiceText = "";
         LastBattleText = "";
+        LastVoyage = null;
         Notify();
     }
 
-    public void TravelTo(string islandId)
+    public void SelectDestination(string islandId)
     {
-        if (State == GameState.Sailing || State == GameState.Combat) return;
-        StartCoroutine(TravelRoutine(islandId));
-    }
-
-    IEnumerator TravelRoutine(string islandId)
-    {
-        State = GameState.Sailing;
-        Notify();
-        yield return new WaitForSeconds(1.2f);
-        TravelReport rep = GameSession.Travel(Data, islandId);
-        LastReport = rep;
-        if (!rep.ok)
+        PreviewDest = islandId;
+        TravelResult calc;
+        WeatherKind w;
+        string err;
+        if (GameSession.PreviewTravel(Data, islandId, out calc, out w, out err))
         {
-            State = GameState.Island;
-            Notify();
-            yield break;
-        }
-        if (rep.needCombat)
-        {
-            PendingCombat = true;
-            PendingCombatDanger = rep.combatDanger;
-            State = GameState.Combat;
+            Preview = calc;
+            PreviewWeather = w;
         }
         else
         {
-            State = GameState.Island;
+            Preview = null;
         }
-        if (GameSession.IsGameOver(Data)) State = GameState.GameOver;
         Notify();
     }
 
-    public void ResolvePendingBattle(bool flee)
+    public string PreviewError(string islandId)
     {
-        if (!PendingCombat) return;
-        LastBattleText = GameSession.ResolveBattle(Data, PendingCombatDanger, Data.world.day, flee);
-        PendingCombat = false;
+        TravelResult calc;
+        WeatherKind w;
+        string err;
+        GameSession.PreviewTravel(Data, islandId, out calc, out w, out err);
+        return err;
+    }
+
+    public void BeginVoyage(string islandId)
+    {
+        if (State == GameState.Sailing || State == GameState.Combat || State == GameState.Event) return;
+        VoyageReport rep = GameSession.BeginTravel(Data, islandId);
+        LastVoyage = rep;
+        if (!rep.ok)
+        {
+            Notify();
+            return;
+        }
+        EventChoiceText = rep.eventText;
+        StartCoroutine(SailRoutine());
+    }
+
+    IEnumerator SailRoutine()
+    {
+        State = GameState.Sailing;
+        Notify();
+        while (true)
+        {
+            yield return new WaitForSeconds(1.1f);
+            VoyageReport t = GameSession.TravelTick(Data);
+            LastVoyage = t;
+            if (t.tick == TickResult.NeedChoice)
+            {
+                State = GameState.Event;
+                Notify();
+                yield break;
+            }
+            if (t.tick == TickResult.Arrived)
+            {
+                AfterArrival(t);
+                yield break;
+            }
+            Notify();
+        }
+    }
+
+    public void ChooseEventOption(int idx)
+    {
+        if (State != GameState.Event) return;
+        VoyageReport c = GameSession.ChooseEvent(Data, idx);
+        EventChoiceText = c.message;
+        if (c.needCombat)
+        {
+            StartBattle(c.combatDanger);
+            return;
+        }
+        StartCoroutine(SailRoutine());
+    }
+
+    void AfterArrival(VoyageReport rep)
+    {
+        if (rep.needCombat)
+        {
+            StartBattle(rep.combatDanger);
+            return;
+        }
         State = GameSession.IsGameOver(Data) ? GameState.GameOver : GameState.Island;
+        Notify();
+    }
+
+    public void StartBattle(int danger)
+    {
+        List<CharacterData> party = new List<CharacterData>();
+        for (int i = 0; i < Data.crew.Count && party.Count < 4; i++)
+        {
+            if (Data.crew[i].alive) party.Add(Data.crew[i]);
+        }
+        if (party.Count == 0)
+        {
+            State = GameState.GameOver;
+            Notify();
+            return;
+        }
+        List<EnemyData> enemies = CombatSystem.GenerateEnemies(Data.world.seed + Data.world.day, danger, Data.world.day);
+        Battle = BattleState.Start(party, enemies, ShipModules.EquipBonus(Data.ship), Data.GetResource(ResourceId.Medicine), Data.world.seed + Data.world.day * 3 + danger);
+        PendingCombatDanger = danger;
+        State = GameState.Combat;
+        Notify();
+    }
+
+    public void BattleAct(BattleAction a, int target)
+    {
+        if (Battle == null || State != GameState.Combat) return;
+        LastBattleText = Battle.Act(a, target);
+        Data.SetResource(ResourceId.Medicine, Math.Max(0, Battle.medicines - Battle.medicinesUsed));
+        if (Battle.over)
+        {
+            LastBattleText = GameSession.FinishBattle(Data, Battle.party, Battle.DeadIds(), Battle.victory, Battle.fled, PendingCombatDanger, Battle.log);
+            Battle = null;
+            State = GameSession.IsGameOver(Data) ? GameState.GameOver : GameState.Island;
+        }
         Notify();
     }
 
     public void BackToMap()
     {
-        if (State == GameState.Sailing || State == GameState.Combat) return;
+        if (State == GameState.Sailing || State == GameState.Combat || State == GameState.Event) return;
         State = GameState.Map;
         Notify();
     }
@@ -125,8 +215,15 @@ public class GameManager : MonoBehaviour
         try
         {
             Data = SaveSystem.LoadFromFile(SavePath());
+            // estado volatil nao sobrevive ao load: cancela viagem/batalha em curso
+            Data.sailDestId = "";
+            Data.sailDay = 0;
+            Data.sailTotal = 0;
+            Data.pendingEvent = TravelEventKind.None;
+            Battle = null;
+            Preview = null;
+            PreviewDest = "";
             State = GameState.Map;
-            PendingCombat = false;
             Notify();
             return "Save carregado (dia " + Data.world.day + ").";
         }

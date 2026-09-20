@@ -74,5 +74,22 @@ namespace CrewJournal.Logic
             if (wage > 20) wage = 20;
             return wage;
         }
+
+        public static string BioFor(CharacterData c)
+        {
+            int h = 0;
+            for (int i = 0; i < c.id.Length; i++) h += c.id[i];
+            string[] origins = new string[] {
+                "Filho de pescadores, cresceu entre redes e maresias.",
+                "Fugiu de casa aos 16 anos para buscar vida no mar.",
+                "Ex-soldado de uma milicia costeira, cansado de ordens.",
+                "Criado num farol isolado, aprendeu a ler as estrelas.",
+                "Perdeu tudo numa tempestade; o mar lhe deve uma chance."
+            };
+            string o = origins[h % origins.Length];
+            string t = c.traits.Count > 0 ? c.traits[h % c.traits.Count] : "reservado";
+            string job = c.jobs.Count > 0 ? c.jobs[0] : "Marujo";
+            return o + " " + job + " " + t + ", busca um novo comeco no mar.";
+        }
     }
 }

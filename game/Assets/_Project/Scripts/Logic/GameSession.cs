@@ -17,7 +17,7 @@ namespace CrewJournal.Logic
         public List<string> log = new List<string>();
     }
 
-    public static class GameSession
+    public static partial class GameSession
     {
         public static GameData NewGame(int seed)
         {
@@ -256,13 +256,24 @@ namespace CrewJournal.Logic
                 if (d.roster[i].id == charId) c = d.roster[i];
             }
             if (c == null) { msg = "Personagem indisponivel."; return false; }
-            if (AliveCrew(d) >= d.ship.crewCap) { msg = "Navio lotado (cap " + d.ship.crewCap + "). Compre um navio maior."; return false; }
+            if (AliveCrew(d) >= ShipModules.EffectiveCrewCap(d.ship)) { msg = "Navio lotado (cap " + ShipModules.EffectiveCrewCap(d.ship) + "). Compre um navio maior ou módulos."; return false; }
             if (d.GetResource(ResourceId.Money) < c.hireCost) { msg = "Dinheiro insuficiente (" + c.hireCost + ")."; return false; }
             d.AddResource(ResourceId.Money, -c.hireCost);
             d.roster.Remove(c);
             d.crew.Add(c);
             AddJournal(d, c.displayName + " juntou-se a tripulacao no dia " + d.world.day + ".");
             d.SetRep(d.currentIslandId, d.GetRep(d.currentIslandId) + 2);
+            Random rr = new Random(c.id.Length * 131 + d.world.day * 17 + d.crew.Count * 101);
+            for (int i = 0; i < d.crew.Count; i++)
+            {
+                if (d.crew[i].id == c.id) continue;
+                RelationshipData rel = new RelationshipData();
+                rel.aId = c.id;
+                rel.bId = d.crew[i].id;
+                rel.affinity = rr.Next(-20, 61);
+                rel.trust = rr.Next(20, 81);
+                d.relations.Add(rel);
+            }
             msg = c.displayName + " recrutado!";
             return true;
         }
@@ -293,52 +304,7 @@ namespace CrewJournal.Logic
             if (party.Count == 0) return "Ninguem vivo para lutar.";
             List<EnemyData> enemies = CombatSystem.GenerateEnemies(d.world.seed + salt, danger, d.world.day);
             BattleResult r = CombatSystem.Simulate(party, enemies, d.world.seed + salt * 3 + d.world.day, flee);
-            string out_ = "";
-            for (int i = 0; i < r.log.Count && i < 8; i++) out_ += r.log[i] + "\n";
-            if (r.fled)
-            {
-                AddJournal(d, "Batalha evitada com fuga no dia " + d.world.day + ".");
-                return out_ + "Fuga bem-sucedida.";
-            }
-            if (r.victory)
-            {
-                int reward = 60 + danger * 40;
-                d.AddResource(ResourceId.Money, reward);
-                d.notoriety += 20 + danger * 5;
-                for (int i = 0; i < party.Count; i++)
-                {
-                    if (party[i].alive)
-                    {
-                        party[i].fighter = Math.Min(99, party[i].fighter + 3);
-                        party[i].kills++;
-                    }
-                }
-                // missoes de combate aceitas completam na vitoria
-                for (int i = 0; i < d.missions.Count; i++)
-                {
-                    if (d.missions[i].type == MissionType.Combat &&
-                        (d.missions[i].status == MissionStatus.Accepted || d.missions[i].status == MissionStatus.InProgress))
-                    {
-                        d.missions[i].status = MissionStatus.Completed;
-                        d.AddResource(ResourceId.Money, d.missions[i].reward);
-                        out_ += "Missao de combate cumprida (+" + d.missions[i].reward + ").\n";
-                    }
-                }
-                AddJournal(d, "Vitoria em batalha no dia " + d.world.day + " (+" + reward + " moedas).");
-                out_ += "Vitoria! +" + reward + " moedas.";
-            }
-            else
-            {
-                d.ship.hull -= 5;
-                if (d.ship.hull < 0) d.ship.hull = 0;
-                AddJournal(d, "Derrota em batalha no dia " + d.world.day + ". Navio danificado.");
-                out_ += "Derrota. Navio -5 casco.";
-            }
-            for (int i = 0; i < r.deadCrewIds.Count; i++)
-            {
-                RegisterDeath(d, r.deadCrewIds[i], "Ferimentos em combate");
-            }
-            return out_;
+            return FinishBattle(d, party, r.deadCrewIds, r.victory, r.fled, danger, r.log);
         }
 
         public static void RegisterDeath(GameData d, string charId, string cause)

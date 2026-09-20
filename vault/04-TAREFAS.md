@@ -1,7 +1,12 @@
 # 04 — Tarefas
 
 ## Em progresso
-- [ ] Playtest manual do loop (usuário): mapa→viagem→ilha→combate→diário→save no `Build/crew-journal.exe`
+- [ ] v0.2 refs: preview+clima, eventos com escolhas, combate por turnos, módulos, XP/nível, tema navy+pergaminho (sessão atual)
+
+## Backlog
+- [ ] Playtest manual do loop completo no `Build/crew-journal.exe`
+- [ ] Habilidades de combate (refs pedem "Habilidade"; v0.2 usa ataque pesado simples)
+- [ ] História procedural de personagem em 2-3 linhas (hoje 1 linha)
 
 ## Backlog
 - [ ] Trocar placeholders por arte final; eventos com escolhas (GDD secao 10)

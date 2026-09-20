@@ -28,3 +28,8 @@ Formato: `## YYYY-MM-DD — Título` + Contexto / Decisão / Consequência.
 - Contexto: usuário reinstalou → `6000.6.2f1-x86_64` tem UPM (96MB, legível, hash OK) mas Windows recusa execução (erro 1392) até em cópia no Temp; sem Mark-of-Web; só Windows Defender ativo, sem detecção Unity. Install antigo sem o exe, novo com exe corrompido = causa fora do Unity.
 - Decisão: parar de sondar sem admin; remediation no lado do usuário (exclusão Defender + reinstall limpo). Repo `guiolv/crew-journal` público criado e com push (main).
 - Consequência: bootstrap da cena + build Windows ficam para quando o Editor abrir; comandos prontos no README.
+
+## 2026-09-20 — v0.2 conforme refs: viagem em etapas, combate por turnos, módulos, XP
+- Contexto: refs "Sail & Survive" exigem preview+clima, eventos com 3 escolhas, combate com ações, módulos, ficha/XP, tema navy+pergaminho.
+- Decisão: `Voyage.cs` (Preview/Begin/Tick/Choose/Arrive + clima determinístico), `TravelEvents.cs` (3 opções/evento), `BattleState` interativo (fila por velocidade, atacar/pesado/defender/item/fugir), `ShipModules.cs` (5 tipos com efeito), `Progression.cs` (XP/nível), `FinishBattle` compartilhado, UI reescrita no tema.
+- Consequência: testes 24/24; saves antigos continuam lendo (membros novos têm default).

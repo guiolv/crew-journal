@@ -84,6 +84,103 @@ public static class LogicTests
         TravelReport rep = GameSession.Travel(g8, g8.world.islands[1].id);
         Check(rep.ok && g8.world.day > day0 && g8.currentIslandId == g8.world.islands[1].id, "travel-advances");
 
+        // 10. Weather deterministico
+        WeatherKind wa = GameSession.RollWeather(42, 5, 2);
+        WeatherKind wb = GameSession.RollWeather(42, 5, 2);
+        Check(wa == wb, "weather-deterministic");
+
+        // 11. Voyage completo: preview -> begin -> ticks -> chegada
+        GameData g9 = GameSession.NewGame(31);
+        g9.AddResource(ResourceId.Food, 50);
+        g9.AddResource(ResourceId.Water, 50);
+        string dest = g9.world.islands[1].id;
+        TravelResult pv;
+        WeatherKind pw;
+        string perr;
+        bool pok = GameSession.PreviewTravel(g9, dest, out pv, out pw, out perr);
+        Check(pok, "voyage-preview");
+        VoyageReport br = GameSession.BeginTravel(g9, dest);
+        Check(br.ok && g9.sailDestId == dest, "voyage-begin");
+        int guard = 0;
+        VoyageReport last = br;
+        while (guard < 20)
+        {
+            guard++;
+            if (g9.sailDestId == "") break;
+            VoyageReport t = GameSession.TravelTick(g9);
+            last = t;
+            if (t.tick == TickResult.NeedChoice)
+            {
+                VoyageReport ch = GameSession.ChooseEvent(g9, 1);
+                if (ch.needCombat)
+                {
+                    string bt = GameSession.ResolveBattle(g9, ch.combatDanger, 500 + guard, false);
+                    Check(bt.Length > 0, "voyage-event-combat");
+                }
+            }
+            if (t.tick == TickResult.Arrived) break;
+        }
+        Check(g9.currentIslandId == dest, "voyage-arrived");
+
+        // 12. Escolhas de evento executam sem erro
+        GameData g10 = GameSession.NewGame(77);
+        bool chOk = true;
+        TravelEventKind[] kinds = new TravelEventKind[] { TravelEventKind.Storm, TravelEventKind.AbandonedShip, TravelEventKind.UnknownShip, TravelEventKind.SeaCreature };
+        for (int k = 0; k < kinds.Length; k++)
+        {
+            for (int o = 0; o < 3; o++)
+            {
+                bool nc;
+                int cd;
+                string txt = TravelEvents.ApplyChoice(g10, kinds[k], o, new Random(1 + k * 3 + o), out nc, out cd);
+                if (txt == null || txt.Length == 0) chOk = false;
+            }
+        }
+        Check(chOk, "event-choices");
+
+        // 13. BattleState deterministico + termina
+        GameData ga = GameSession.NewGame(91);
+        GameData gb = GameSession.NewGame(91);
+        List<CharacterData> pa = new List<CharacterData>();
+        List<CharacterData> pb = new List<CharacterData>();
+        for (int i = 0; i < ga.crew.Count; i++) pa.Add(ga.crew[i]);
+        for (int i = 0; i < gb.crew.Count; i++) pb.Add(gb.crew[i]);
+        List<EnemyData> ea = CombatSystem.GenerateEnemies(1000, 2, 1);
+        List<EnemyData> eb = CombatSystem.GenerateEnemies(1000, 2, 1);
+        BattleState sa = BattleState.Start(pa, ea, 0, 1, 555);
+        BattleState sb = BattleState.Start(pb, eb, 0, 1, 555);
+        string ta = sa.Act(BattleAction.Attack, 0);
+        string tb = sb.Act(BattleAction.Attack, 0);
+        Check(ta == tb, "battle-deterministic");
+        int rounds = 0;
+        while (!sa.over && rounds < 200)
+        {
+            rounds++;
+            CharacterData cur = sa.CurrentCrew();
+            if (cur == null) break;
+            sa.Act(BattleAction.Attack, 0);
+        }
+        Check(sa.over, "battle-terminates");
+
+        // 14. Modulos: barril recusa, barco aceita, slots respeitados
+        GameData g11 = GameSession.NewGame(55);
+        g11.AddResource(ResourceId.Money, 5000);
+        g11.AddResource(ResourceId.Wood, 50);
+        g11.AddResource(ResourceId.Metal, 20);
+        string mm;
+        Check(!ShipModules.Buy(g11, "kitchen", out mm), "modules-barrel-refused");
+        string bm;
+        GameSession.BuyShip(g11, "boat", out bm);
+        Check(ShipModules.Buy(g11, "kitchen", out mm) && ShipModules.UsedSlots(g11.ship) == 1, "modules-buy");
+        Check(ShipModules.EffectiveCrewCap(g11.ship) == 4, "modules-cap-base");
+        ShipModules.Buy(g11, "dorm", out mm);
+        Check(ShipModules.EffectiveCrewCap(g11.ship) == 6, "modules-dorm-effect");
+
+        // 15. XP sobe nivel
+        CharacterData cx = CharacterGenerator.Generate(5, 3);
+        int ups = Progression.AddXp(cx, 250);
+        Check(ups >= 1 && cx.level >= 2, "xp-levelup");
+
         Console.WriteLine("----");
         Console.WriteLine("pass=" + pass + " fail=" + fail);
         return fail == 0 ? 0 : 1;

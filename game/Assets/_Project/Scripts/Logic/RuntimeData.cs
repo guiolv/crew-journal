@@ -56,6 +56,7 @@ namespace CrewJournal.Logic
         [DataMember] public bool alive;
         [DataMember] public int morale;
         [DataMember] public int loyalty;
+        [DataMember] public int xp;
         [DataMember] public int battles;
         [DataMember] public int kills;
         [DataMember] public int hireCost;
@@ -104,6 +105,19 @@ namespace CrewJournal.Logic
         [DataMember] public int cargoCap;
         [DataMember] public float speed;
         [DataMember] public int modules;
+        [DataMember] public List<ModuleEntry> mods;
+
+        public ShipData()
+        {
+            mods = new List<ModuleEntry>();
+        }
+    }
+
+    [DataContract]
+    public class ModuleEntry
+    {
+        [DataMember] public string type;
+        [DataMember] public int count;
     }
 
     [DataContract]
@@ -177,6 +191,10 @@ namespace CrewJournal.Logic
         [DataMember] public string currentIslandId;
         [DataMember] public int nextCharIndex;
         [DataMember] public int nextMissionIndex;
+        [DataMember] public string sailDestId;
+        [DataMember] public int sailDay;
+        [DataMember] public int sailTotal;
+        [DataMember] public TravelEventKind pendingEvent;
 
         public GameData()
         {
@@ -189,6 +207,7 @@ namespace CrewJournal.Logic
             journal = new List<JournalEntry>();
             memorial = new List<DeathRecord>();
             relations = new List<RelationshipData>();
+            sailDestId = "";
         }
 
         public int GetResource(ResourceId id)

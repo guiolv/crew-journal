@@ -63,4 +63,11 @@ namespace CrewJournal.Logic
         SeaCreature,
         CalmBonus
     }
+
+    public enum WeatherKind
+    {
+        Clear,
+        Cloudy,
+        Storm
+    }
 }
