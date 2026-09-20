@@ -21,3 +21,8 @@
 - Achado real: `UnityEngine.UI` não existia — faltava `com.unity.ugui@2.6.0` no manifest (built-in, resolve local). Adicionado, compilação limpa.
 - `V1Bootstrap.Build` via CLI criou `Assets/_Project/Scenes/World.unity`; `V1Build.BuildWindows` gerou `<repo>/Build/crew-journal.exe`.
 - Smoke test: exe vivo 15s+, Player.log sem exceptions/erros. Push em dia (c4b5907 no remote).
+
+## 2026-09-20 — ses_f441bb278ffeK6WjqT2ncewDl3 — v0.2 refs entregue e verificada
+- Voyage.cs + TravelEvents + BattleState + ShipModules + Progression + FinishBattle; GameManager/UI reescritos no fluxo detalhe→viagem→evento→chegada→combate; tema navy+pergaminho.
+- Verificação: LogicTests 24/24 (console), V1Playtest no engine 13/13 (recruta, módulo, viagem+evento, trade, missão, turnos, save/load, memorial), build Windows refeito, smoke limpo.
+- Critério técnico TDD-35: 12/12. Gaps honestos pós-MVP: 5 tipos de evento (GDD ~10), 1 habilidade genérica, bio 1 linha, clima só em viagem. Multiplayer fora (pós-MVP por definição).
