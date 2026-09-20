@@ -1,7 +1,7 @@
 # 04 — Tarefas
 
 ## Em progresso
-- [ ] Playtest manual do loop completo no `Build/crew-journal.exe` (usuário)
+- [ ] UI v3 jogável (sessão atual): scroll + layout groups, mapa posicionado, botões grandes, Menu separado — build em curso, falta screenshot do usuário confirmando
 
 ## Backlog
 - [ ] 5 eventos marítimos → ~10 (GDD fala ~10; hoje: tempestade, abandonado, desconhecido, criatura, calmaria)
