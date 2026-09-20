@@ -27,10 +27,12 @@ OPENCODE/
 ```
 
 ## Unity CLI — verificar antes de usar
-Antes de assumir comando, inspecionar localmente:
-- `where unity` / `where Unity` / Unity Hub path
-- Versão instalada e módulos (Android, Windows, etc.)
-- Em sessão futura: rodar descoberta e registrar comandos reais aqui.
+- Editor: `C:\Program Files\Unity\Hub\Editor\6000.6.2f1\Editor\Unity.exe` (versão 6000.6.2f1 confirmada via `-version`)
+- Roslyn moderno: `.../Editor/Data/DotNetSdk/dotnet.exe` + `sdk/8.0.318/Roslyn/bincore/csc.dll`
+- Ref netstandard: `.../Data/DotNetSdk/packs/NETStandard.Library.Ref/2.1.0/ref/netstandard2.1/netstandard.dll`
+- Engine DLLs: `.../Editor/Data/Managed/UnityEngine/` (CoreModule, UIModule, TextRenderingModule)
+- ATENÇÃO 2026-09-20: instalação corrompida — falta `Data/Resources/PackageManager/Server/UnityPackageManager.exe` e módulos SceneManagement. `-createProject` falha. Projeto foi montado manualmente (Assets/Packages/ProjectSettings). Reparar via Unity Hub (reinstalar 6000.6.2f1) antes de abrir/compilar no Editor.
+- Verificação sem Editor: `game/Tools/LogicTests/` (12 testes, csc Framework) + `game/Tools/CompileCheck/` (Roslyn + stubs uGUI, CHECK-A/B=0).
 
 Padrões esperados (confirmar):
 - `Unity -batchmode -nographics -projectPath ./game -executeMethod <Classe.Metodo> -quit -logFile -`

@@ -8,3 +8,18 @@ Formato: `## YYYY-MM-DD — Título` + Contexto / Decisão / Consequência.
 - Contexto: necessidade de contexto entre sessões.
 - Decisão: usar `./vault/` + `AGENTS.md` com protocolo obrigatório de leitura/escrita. `instructions` do `opencode.jsonc` NÃO é usado (V2 não resolve esse campo).
 - Consequência: toda sessão deve ler vault primeiro e atualizar no fim.
+
+## 2026-09-20 — Arquitetura v0.1: lógica pura + adaptadores Unity
+- Contexto: Editor Unity corrompido impede compilação/build; TDD exige sistemas desacoplados da UI.
+- Decisão: `Assets/_Project/Scripts/Logic/` sem nenhuma referência UnityEngine (DTOs + GameSession + Save). `Scripts/Unity/` (GameManager, GameUI) e `Scripts/Editor/` (V1Bootstrap, V1Build) como camada fina.
+- Consequência: lógica verificável via csc + testes console (12/12); UI/Editor compilam no Editor após reparo.
+
+## 2026-09-20 — UI construída por código + placeholders procedurais
+- Contexto: sem Editor funcional não há como montar cenas/prefabs; sem assets externos.
+- Decisão: GameUI.cs monta Canvas uGUI inteiro em runtime; PlaceholderArt.cs gera sprites 16x16 por código; V1Bootstrap cria a cena World via `-executeMethod`.
+- Consequência: zero assets binários no repo; trocar por arte final depois sem mexer em lógica.
+
+## 2026-09-20 — Projeto Unity montado manualmente
+- Contexto: `Unity -createProject` falha (PackageManager ausente).
+- Decisão: criar `game/Assets/`, `game/Packages/manifest.json` mínimo, `game/ProjectSettings/ProjectVersion.txt` (6000.6.2f1) à mão; commit local `f9081f4`.
+- Consequência: ao reparar o Editor, abrir `game/` e rodar bootstrap; GitHub push pendente de `gh auth login`.

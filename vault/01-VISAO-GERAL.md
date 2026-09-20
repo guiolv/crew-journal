@@ -4,7 +4,7 @@
 - Trabalhar em um game a partir de um GDD fornecido pelo usuário.
 - Implementar usando Unity CLI de forma incremental e verificável.
 
-Status: aguardando GDD do usuário.
+Status: GDD/TDD/GED recebidos. Scaffold v0.1 criado e commitado (f9081f4). Lógica verificada 12/12. Build jogável BLOQUEADO: instalação Unity corrompida (falta UnityPackageManager.exe).
 
 ## /loop
 Loop de trabalho esperado:
