@@ -112,3 +112,7 @@
 ## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Ilhas organicas (fim do diamante)
 - BlobR: raio com ruido angular (3 senos + fases por hash), silhouette so varia tamanho; pecas com pull-in p/ dentro do blob; Fallback igual.
 - Caveira so em Dangerous (scatter); raio 44-52. Preview confere costa irregular. Debug: base 'sumida' era engano de thumbnail - cells=6 provado em log.
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Rebuild visual mono (screenshots)
+- Screenshot do usuario: botoes com miolo transparente + sem icones. Causa: clean() comia regiao solida + UIStyle.Get so olhava Art/UI. Corrigido.
+- Fonte Kenney Pixel/Mini, mar animado (sea_0-3), labels Perigo restauradas, chip Mad com icone. Screenshot proprio confirma: botoes, icones, cards, mar, fonte OK.
