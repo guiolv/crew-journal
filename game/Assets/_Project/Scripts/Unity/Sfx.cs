@@ -1,5 +1,5 @@
-// CrewJournal — SFX 100% procedurais (sem assets). Tons + ruido gerados em runtime.
-// Auditoria game-feel #3: confirmacao fora da area visual + impacto.
+// CrewJournal — SFX com override por arquivo (Resources/Audio/sfx_<nome>).
+// Sem arquivo = procedural. Auditoria game-feel #3.
 using System;
 using UnityEngine;
 
@@ -33,6 +33,15 @@ public static class Sfx
         Src().PlayOneShot(clip);
     }
 
+    static bool PlayFile(string key)
+    {
+        if (muted) return true;
+        AudioClip clip = Resources.Load<AudioClip>("Audio/sfx_" + key);
+        if (clip == null) return false;
+        Src().PlayOneShot(clip);
+        return true;
+    }
+
     static float[] Tone(float freq, float secs, float slideTo)
     {
         int n = Math.Max(1, (int)(Rate * secs));
@@ -63,16 +72,17 @@ public static class Sfx
 
     public static void Click()
     {
-        Play(Tone(1250f, 0.06f, 900f));
+        if (!PlayFile("click")) Play(Tone(1250f, 0.06f, 900f));
     }
 
     public static void Coin()
     {
-        Play(Mix(Tone(950f, 0.09f, 950f), Tone(1420f, 0.14f, 1420f)));
+        if (!PlayFile("coin")) Play(Mix(Tone(950f, 0.09f, 950f), Tone(1420f, 0.14f, 1420f)));
     }
 
     public static void Hit()
     {
+        if (PlayFile("hit")) return;
         System.Random rng = new System.Random();
         int n = (int)(Rate * 0.18f);
         float[] d = new float[n];
@@ -88,11 +98,11 @@ public static class Sfx
 
     public static void Victory()
     {
-        Play(Mix(Tone(523f, 0.12f, 523f), Tone(659f, 0.12f, 659f), Tone(784f, 0.2f, 784f)));
+        if (!PlayFile("victory")) Play(Mix(Tone(523f, 0.12f, 523f), Tone(659f, 0.12f, 659f), Tone(784f, 0.2f, 784f)));
     }
 
     public static void Defeat()
     {
-        Play(Mix(Tone(330f, 0.15f, 300f), Tone(262f, 0.15f, 240f), Tone(196f, 0.25f, 150f)));
+        if (!PlayFile("defeat")) Play(Mix(Tone(330f, 0.15f, 300f), Tone(262f, 0.15f, 240f), Tone(196f, 0.25f, 150f)));
     }
 }

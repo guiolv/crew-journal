@@ -42,6 +42,7 @@ public class GameUI : MonoBehaviour
         Build();
         gm.OnChanged += Refresh;
         gm.OnEnemyHit += delegate { Juice.Shake(content); Sfx.Hit(); };
+        Music.PlayMap();
         Refresh();
     }
 
@@ -550,7 +551,7 @@ public class GameUI : MonoBehaviour
         MkBigButton("SALVAR", delegate { msg = gm.Save(); Refresh(); });
         MkBigButton("CARREGAR", delegate { msg = gm.Load(); Refresh(); });
         MkBigButton("NOVA JORNADA", delegate { gm.NewGame(gm.Seed + 1); screen = "map"; msg = "Nova jornada!"; Refresh(); }, true);
-        MkBigButton("SOM: " + (Sfx.muted ? "OFF" : "ON"), delegate { Sfx.muted = !Sfx.muted; Refresh(); });
+        MkBigButton("SOM: " + (Sfx.muted ? "OFF" : "ON"), delegate { Sfx.muted = !Sfx.muted; Music.ApplyMute(); Refresh(); });
         MkButton("Voltar ao mapa", 52, delegate { screen = "map"; Refresh(); });
     }
 

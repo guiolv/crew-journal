@@ -177,6 +177,7 @@ public class GameManager : MonoBehaviour
         Battle = BattleState.Start(party, enemies, ShipModules.EquipBonus(Data.ship), Data.GetResource(ResourceId.Medicine), Data.world.seed + Data.world.day * 3 + danger);
         PendingCombatDanger = danger;
         State = GameState.Combat;
+        Music.PlayCombat();
         Notify();
         if (Battle.CurrentCrew() == null && !Battle.over) StartCoroutine(EnemySteps());
     }
@@ -218,6 +219,7 @@ public class GameManager : MonoBehaviour
         LastBattleText = GameSession.FinishBattle(Data, Battle.party, Battle.DeadIds(), Battle.victory, Battle.fled, PendingCombatDanger, Battle.log);
         Battle = null;
         State = GameSession.IsGameOver(Data) ? GameState.GameOver : GameState.Island;
+        Music.PlayMap();
         Notify();
     }
 

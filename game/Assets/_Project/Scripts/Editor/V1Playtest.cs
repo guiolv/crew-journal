@@ -115,6 +115,7 @@ namespace CrewJournal.Editor
             Sfx.Click(); Sfx.Coin(); Sfx.Hit(); Sfx.Victory(); Sfx.Defeat();
             Sfx.muted = m0;
             Check(true, "sfx-smoke");
+            Check(Music.HasMusic("music_map"), "music-map");
 
             Debug.Log("PLAYTEST RESULT pass=" + pass + " fail=" + fail);
             if (fail > 0) throw new System.Exception("playtest falhou: " + fail);

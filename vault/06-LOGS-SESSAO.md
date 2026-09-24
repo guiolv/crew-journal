@@ -82,6 +82,10 @@
 - Resultado: 6 perspectivas (A/C/D/F/G/H); 6 tensões, maior risco = permadeath sem apego/causa legível; 3 alternativas (A capitão ativo, B morte em 2 etapas, C vínculos primeiro); protocolo de playtest de 30 min com 6 perguntas (serve o playtest pendente de 04-TAREFAS); questões abertas (balanceamento GED sem sessão real).
 - Nada implementado — review é diagnóstico + plano de validação, não mudança de código.
 
+## 2026-09-24 — ses_f441bb278ffeK6WjqT2ncewDl3 — Música implementada + lista de SFX
+- `game/Sounds/Treasure Map.mp3` (4,3MB) copiado p/ `Assets/Resources/Audio/music_map.mp3`; `Music.cs` novo (loop, PlayMap/PlayCombat, mesmo mute `cj_mute`); SFX com override por arquivo (`sfx_<nome>`, fallback procedural); Menu aplica mute na música; lista do que trazer em `vault/11-AUDIO.md`.
+- Verificação: CHECK-B 0, playtest engine 15/15 (music-map), build + smoke limpos (sem erros de áudio).
+
 ## 2026-09-24 — ses_f441bb278ffeK6WjqT2ncewDl3 — Game Feel itens 1-4 implementados
 - Fast-forward (`sailTick` 1.1→0.25 botão APRESSAR, reseta por viagem); inimigos ritmados (`EnemyTurnPending`/`StepEnemy` 0.35s + Shake + Hit via `OnEnemyHit`; trava input com `stepping`; `StartBattle` drena se inimigo abre); SFX procedurais (`Sfx.cs`: click/coin/hit/victory/defeat + mute PlayerPrefs no Menu; coin por diff de dinheiro); tradeoff da medicina na ficha do grave.
 - Achado no caminho: `CurrentCrew` sem auto-drain quebrava callers (inimigo rápido primeiro) — padrão drain-antes-de-agir nos 3 loops + dreno inicial no `StartBattle`. Teste novo `step-single` prova granularidade (1 inimigo = 1 linha de log).

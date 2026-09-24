@@ -1,6 +1,7 @@
 # 04 — Tarefas
 
 ## Em progresso
+- [x] Áudio (sessão atual): `Treasure Map` como `music_map` em loop + `Music.cs` (mapa/combate) + override de SFX por arquivo; 15/15, build + smoke limpos
 - [ ] Mapa com ilhas desenhadas + nome abaixo (sessão atual): MapIsland no lugar do MapPin — build em curso, falta screenshot do usuário
 - [ ] Playtest manual do loop completo no `Build/crew-journal.exe` (usuário)
 - [x] DESIGN fixes (skill): stance, em-jogo, ferido grave, vínculos — lógica 36/36, type-check 0, build 22:22, playtest 13/13, smoke limpo
