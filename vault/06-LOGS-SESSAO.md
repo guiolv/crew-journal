@@ -116,3 +116,7 @@
 ## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Rebuild visual mono (screenshots)
 - Screenshot do usuario: botoes com miolo transparente + sem icones. Causa: clean() comia regiao solida + UIStyle.Get so olhava Art/UI. Corrigido.
 - Fonte Kenney Pixel/Mini, mar animado (sea_0-3), labels Perigo restauradas, chip Mad com icone. Screenshot proprio confirma: botoes, icones, cards, mar, fonte OK.
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Costa suave + espuma (refs Kenney)
+- Comparacao honesta com refs: gap era autotile de costa. Sem mapear 47 transicoes no escuro: base por pixel (curvas suaves) + espuma procedural na areia + clareiras de terra sob povoados + marcas d'agua esparsas.
+- Raio 36-44 p/ nao clipar. Preview confere. Build em curso.

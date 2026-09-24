@@ -90,13 +90,20 @@ public static class IslandRenderer
     static float BlobR(float wx, float wy, float rad, float ph1, float ph2, float ph3)
     {
         float th = (float)System.Math.Atan2(wy / 0.82f, wx);
-        float edge = 1f + 0.28f * (float)System.Math.Sin(2 * th + ph1)
-            + 0.18f * (float)System.Math.Sin(3 * th + ph2)
-            + 0.10f * (float)System.Math.Sin(5 * th + ph3);
+        float edge = 1f + 0.32f * (float)System.Math.Sin(2 * th + ph1)
+            + 0.20f * (float)System.Math.Sin(3 * th + ph2)
+            + 0.12f * (float)System.Math.Sin(5 * th + ph3);
         float ux = wx / rad;
         float uy = wy / (rad * 0.82f);
         float r = (float)System.Math.Sqrt(ux * ux + uy * uy);
         return r / edge;
+    }
+
+    static bool IsSettlement(string kind)
+    {
+        return kind == "house" || kind == "suburb" || kind == "castle"
+            || kind == "market" || kind == "warehouse" || kind == "tavern"
+            || kind == "church" || kind == "gov" || kind == "plaza";
     }
 
     static Color[] Compose(int worldSeed, string islandId, IslandArchetype arch, IslandVisual v)
@@ -118,7 +125,7 @@ public static class IslandRenderer
         float ph1 = (hh2 % 628) / 100f;
         float ph2 = ((hh2 / 7) % 628) / 100f;
         float ph3 = ((hh2 / 13) % 628) / 100f;
-        float rad = 44 + (v.silhouette % 3) * 4;
+        float rad = 36 + (v.silhouette % 3) * 4;
         // mar de fundo: transparente fora do blob (deck do mapa)
         for (int qy = 0; qy < N; qy++)
         {
@@ -127,18 +134,19 @@ public static class IslandRenderer
                 float wx = qx * T + 8 - 64f;
                 float wy = qy * T + 8 - 98f;
                 float rr = BlobR(wx, wy, rad, ph1, ph2, ph3);
-                if (rr > 1f) continue;
-                Color cc = rr < 0.62f ? cGrass : cSand;
                 if (rr < 0.62f) isGrass[qx, qy] = true;
-                for (int sy = 0; sy < T; sy++)
-                {
-                    for (int sx = 0; sx < T; sx++)
-                    {
-                        int x = qx * T + sx;
-                        int yTop = qy * T + sy;
-                        b[(H - 1 - yTop) * W + x] = cc;
-                    }
-                }
+            }
+        }
+        // base pintada por pixel (costa suave) em vez de celulas
+        for (int yTop = 0; yTop < H; yTop++)
+        {
+            for (int x = 0; x < W; x++)
+            {
+                float wx = x - 64f;
+                float wy = (float)yTop - 98f;
+                float rr = BlobR(wx, wy, rad, ph1, ph2, ph3);
+                if (rr > 1f) continue;
+                b[(H - 1 - yTop) * W + x] = rr < 0.62f ? cGrass : cSand;
             }
         }
         for (int i = 0; i < v.pieces.Count; i++)
@@ -158,6 +166,18 @@ public static class IslandRenderer
             }
             int dx = (int)fpx - 8;
             int dyTop = (int)fpy - 8;
+            if (IsSettlement(p.kind))
+            {
+                Color[] dirt = PxOf(Tex("dirt"));
+                if (dirt != null)
+                {
+                    int bx0 = (dx + 8) / T, by0 = (dyTop + 8) / T;
+                    Blit(b, dirt, (bx0 - 1) * T, (by0 - 1) * T);
+                    Blit(b, dirt, bx0 * T, (by0 - 1) * T);
+                    Blit(b, dirt, (bx0 - 1) * T, by0 * T);
+                    Blit(b, dirt, bx0 * T, by0 * T);
+                }
+            }
             Blit(b, tp, dx, dyTop);
             int bx = (dx + 8) / T, by = (dyTop + 8) / T;
             if (bx >= 0 && bx < N && by >= 0 && by < N) busy[bx, by] = true;
@@ -182,6 +202,45 @@ public static class IslandRenderer
             Color[] tp = PxOf(Tex(acc[rng.Next(acc.Length)]));
             if (tp == null) continue;
             Blit(b, tp, cell[0] * T, cell[1] * T);
+        }
+        // marcas d'agua esparsas no mar (como na referencia)
+        List<int[]> seaCells = new List<int[]>();
+        for (int qy = 0; qy < N; qy++)
+        {
+            for (int qx = 0; qx < N; qx++)
+            {
+                float wx = qx * T + 8 - 64f;
+                float wy = qy * T + 8 - 98f;
+                float rr = BlobR(wx, wy, rad, ph1, ph2, ph3);
+                if (rr >= 1f && rr < 2.2f) seaCells.Add(new int[] { qx, qy });
+            }
+        }
+        for (int i = 0; i < 8 && seaCells.Count > 0; i++)
+        {
+            int k = rng.Next(seaCells.Count);
+            int[] cell = seaCells[k];
+            seaCells.RemoveAt(k);
+            Color[] tp = PxOf(Tex(rng.Next(2) == 0 ? "water1" : "water2"));
+            if (tp == null) continue;
+            Blit(b, tp, cell[0] * T, cell[1] * T);
+        }
+        // espuma: pixels de areia vizinhos ao mar ficam claros (contorno da ref)
+        Color foam = new Color(200f / 255f, 200f / 255f, 225f / 255f);
+        Color sandRef = new Color(142f / 255f, 139f / 255f, 183f / 255f);
+        for (int yTop = 0; yTop < H; yTop++)
+        {
+            for (int x = 0; x < W; x++)
+            {
+                Color c = b[(H - 1 - yTop) * W + x];
+                if (c.a <= 0.5f) continue;
+                if (System.Math.Abs(c.r - sandRef.r) + System.Math.Abs(c.g - sandRef.g) + System.Math.Abs(c.b - sandRef.b) > 0.24f) continue;
+                bool edge = false;
+                if (x > 0 && b[(H - 1 - yTop) * W + x - 1].a <= 0.5f) edge = true;
+                if (x < W - 1 && b[(H - 1 - yTop) * W + x + 1].a <= 0.5f) edge = true;
+                if (yTop > 0 && b[(H - yTop) * W + x].a <= 0.5f) edge = true;
+                if (yTop < H - 1 && b[(H - 2 - yTop) * W + x].a <= 0.5f) edge = true;
+                if (edge) b[(H - 1 - yTop) * W + x] = foam;
+            }
         }
         return b;
     }
