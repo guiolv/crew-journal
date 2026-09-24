@@ -36,3 +36,28 @@
 - Proposta do usuário implementada: DNA puro + gramáticas de arquétipo + renderers pixel-art em estilo único + GDD-31/TDD-36 no vault.
 - Verificação: lógica 30/30, playtest engine 13/13, type-check Unity 0 erros, build refeito, smoke limpo, arte conferida a olho via PNG exportado (retratos/ilhas/navios legíveis e consistentes).
 - Cicatriz adquirida em batalha implementada (visual evolui com história). Contrato p/ biblioteca externa PNG definido, assets pendentes.
+
+## 2026-09-22 — ses_f3944e4baffe0k3t7OxM1S180M — Scaffold gerador local de sprites (IA)
+- `tools/sprite-gen/`: dna.py (hash emulado do C#), prompts.py (templates por profissão/arquétipo/navio), generate.py (ComfyUI local + --dry-run), post.py (key-out magenta + nearest + paleta), validate.py, comfy_workflow.json, library_plan.json (49 PNGs), README com setup DirectML p/ RX 6600.
+- Unity: `IPartSource.cs` (SpriteLib chaves + ResourcesPartSource + fallback), hooks em Portrait/Island/ShipRenderer, `Pixel.ClonePixels`, `Resources/Art/{Portraits,Islands,Ships}/`. TDD-36.1 documenta contrato.
+- Verificação: csc Roslyn 0 erros (Logic + 5 Unity); StableHash C# == porta Python em 6/6 strings (incl. overflow int32); LogicTests 30/30; JSONs válidos. Python NÃO executado (sem interpretador na máquina).
+- Pendente (usuário): instalar Python 3.10 + ComfyUI --directml, `generate.py`, `post.py`, marcar import Point/No-compression.
+
+## 2026-09-22 — ses_f3944e4baffe0k3t7OxM1S180M — Python instalado + testes do gerador executados
+- Instalado Python 3.12.10 user-scope via winget + Pillow/requests. `dna.py` real: hash 6/6 == C#, 49 chaves únicas.
+- `validate.py --manifest-only`: 0 erros. `generate.py --dry-run`: 49 entradas em `out/manifest.json`. `post.py` ponta a ponta com raw sintético: 512px magenta → 40x48, fundo transparente (1276px), 1 cor de paleta. Artefatos de teste removidos do repo.
+
+## 2026-09-22 — ses_f3944e4baffe0k3t7OxM1S180M — UI kit + juice + downloads IA
+- Gerador 79 entradas (49 sprites + 23 UI + 7 frames sea/sailship); `UIStyle.cs` (botoes/cards/pins/icones/progresso/moldura/compass) + `Juice.cs` (fade/punch/shake/flash/Frames/FillTo) fiados no GameUI com fallback total.
+- Verificação: csc 0 erros (dir Unity inteira), LogicTests 30/30, validate 0 erros, dry-run 79.
+- Toolchain: Python 3.12 + Pillow, aria2 multi-conexão; checkpoint SD1.5 completo (4.27GB), LoRA PixelArtRedmond OK, portable AMD v0.37.0 retomado com retry infinito após erro transitório 10051 (44%).
+- Pendente: extrair portable → ComfyUI --directml → smoke visual → lote 79 → post → validate → build.
+
+## 2026-09-22 — ses_f3944e4baffe0k3t7OxM1S180M — Downloads concluidos, extração
+- Checkpoint + portable AMD baixados via aria2; hash SHA256 do portable confere com release (563da246…).
+- Extraindo p/ `tools/comfy/` (gitignored). Próximo: modelos p/ checkpoints/loras + `run_amd_gpu` --directml.
+
+## 2026-09-23 — ses_f441bb278ffeK6WjqT2ncewDl3 — Lens review da skill `skills/`
+- Rodada skill game-design (Schell) em modo REVIEW sobre crew-journal → `vault/08-LENS-REVIEW.md`.
+- Resultado: 6 perspectivas (A/C/D/F/G/H); 6 tensões, maior risco = permadeath sem apego/causa legível; 3 alternativas (A capitão ativo, B morte em 2 etapas, C vínculos primeiro); protocolo de playtest de 30 min com 6 perguntas (serve o playtest pendente de 04-TAREFAS); questões abertas (balanceamento GED sem sessão real).
+- Nada implementado — review é diagnóstico + plano de validação, não mudança de código.

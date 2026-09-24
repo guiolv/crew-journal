@@ -71,3 +71,10 @@ unity-build.log
 
 # Vault - keep in repo (memory)
 !vault/
+
+# Local AI toolchain (GBs, regeneravel)
+tools/comfy/
+tools/comfy-dl/
+tools/comfy-cpu/.venv/
+tools/sprite-gen/out/
+**/.venv/
