@@ -199,26 +199,18 @@ def despike_interior(im):
     return out
 
 
-def rebuild_button(src, band):
-    # pontas 20px (rolos, sem texto) + faixa limpa do painel; saida 160x64
+def rebuild_button(src, band, tint3):
+    # pontas 20px (rolos, texto dissolvido) + faixa limpa do painel; 160x64
     W, H = 160, 64
     left = src.crop((0, 0, 20, src.size[1])).resize((20, H))
     right = src.crop((src.size[0] - 20, 0, src.size[0], src.size[1])).resize((20, H))
-    eb = avg_rgb(left.crop((0, H // 2 - 4, 20, H // 2 + 4)))
-    bb = avg_rgb(band)
-    mult = []
-    for i in range(3):
-        m = eb[i] / max(1, bb[i])
-        if m < 0.7: m = 0.7
-        if m > 1.3: m = 1.3
-        mult.append(m)
-    mid = tint(band, 1).resize((W - 40, H))
+    mid = band.resize((W - 40, H))
     px = mid.load()
     for y in range(mid.size[1]):
         for x in range(mid.size[0]):
             r, g, b, a = px[x, y]
-            px[x, y] = (min(255, int(r * mult[0])), min(255, int(g * mult[1])),
-                        min(255, int(b * mult[2])), a)
+            px[x, y] = (min(255, int(r * tint3[0])), min(255, int(g * tint3[1])),
+                        min(255, int(b * tint3[2])), a)
     out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     out.paste(mid, (20, 0))
     out.paste(left, (0, 0), left)
@@ -273,15 +265,19 @@ def main():
             print("VAZIO BTN:", name)
             continue
         pw, ph = src.size
-        band = clean(crop_frac(im, (.360, .240, .480, .270)))
-        btn = rebuild_button(src, band)
+        pw, ph = src.size
+        band = crop_frac(im, (.360, .240, .480, .270))
+        tints = {"normal": (1, 1, 1), "highlight": (1, 1, 1),
+                 "pressed": (0.88, 0.86, 0.84), "menu": (0.62, 0.50, 0.40)}
+        btn = rebuild_button(src, band, tints[name])
         if name == "normal":
             save(btn, "UI", "btn_teal")
             done("btn_teal", btn)
         elif name == "highlight":
-            save(btn, "UI", "btn_gold")
+            hb = tint(btn, 1.07, 4)
+            save(hb, "UI", "btn_gold")
             save(tint(btn, 0.85), "UI", "btn_gold_pressed")
-            done("btn_gold", btn)
+            done("btn_gold", hb)
         elif name == "pressed":
             save(btn, "UI", "btn_teal_pressed")
             done("btn_teal_pressed", btn)

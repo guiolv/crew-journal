@@ -103,3 +103,8 @@
 - Limitação declarada: sem controle em tempo real — só eixos Resposta/Contexto/Polish/Metáfora/Regras.
 - 4 mudanças priorizadas com cadeia causal: fast-forward da viagem, resolução inimiga legível (delay+flash), SFX procedurais mínimos (zero áudio hoje — grep confirma), conflito da medicina visível.
 - Nada implementado — auditoria, não código. Menor playtest proposto: fast-forward A/B em 2 viagens longas.
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Assets das refs refeitos e fiados (v2)
+- Screenshot mostrava botoes com miolo transparente + topbar sem icones. Causas: clean() comia regiao solida (band) + UIStyle.Get so olhava Art/UI (icones estao em Art/Icons).
+- Slicer refeito: deteccao por scipy, dissolve de texto em linhas, botoes reconstruidos (pontas + faixa + borda redesenhada + tint por estado). 26 assets limpos, conferidos no contact sheet.
+- ArtPostprocessor (9-slice + sem compressao), SkinButton/Card Sliced, topbar em chips com icones. Build + smoke limpos.

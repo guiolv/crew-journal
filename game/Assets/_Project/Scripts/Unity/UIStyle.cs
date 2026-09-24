@@ -14,6 +14,7 @@ public static class UIStyle
         Sprite s;
         if (cache.TryGetValue(key, out s)) return s;
         Texture2D t = Resources.Load<Texture2D>("Art/UI/" + key);
+        if (t == null) t = Resources.Load<Texture2D>("Art/Icons/" + key);
         if (t == null) return null;
         s = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f), 100f);
         cache[key] = s;
