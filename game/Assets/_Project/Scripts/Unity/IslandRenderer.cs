@@ -1,11 +1,19 @@
-// CrewJournal — ilhas 96x64: silhueta + bioma + pecas da gramatica (GDD-31).
+// CrewJournal — ilhas 128x128 compostas de tiles Kenney (monochrome Default).
+// Gramatica + seed identicas (VisualDNA); so a pintura mudou. Fallback chapado se faltar tile.
+// Convencao: yTop (0 = topo), igual a Pixel.Px.
 using System.Collections.Generic;
 using UnityEngine;
 using CrewJournal.Logic;
 
 public static class IslandRenderer
 {
+    const int T = 16;
+    const int N = 8;
+    const int W = 128;
+    const int H = 128;
+
     static Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
+    static Dictionary<string, Texture2D> tiles = new Dictionary<string, Texture2D>();
 
     public static Texture2D Render(int worldSeed, string islandId, IslandArchetype arch)
     {
@@ -13,96 +21,192 @@ public static class IslandRenderer
         Texture2D t;
         if (cache.TryGetValue(key, out t)) return t;
         IslandVisual v = VisualDNA.Island(worldSeed, islandId, arch);
-        Texture2D lib;
-        Color[] libPx = null;
-        if (PartSources.Current != null
-            && PartSources.Current.TryGet("Islands", SpriteLib.IslandKey(arch, v.silhouette), out lib))
-            libPx = Pixel.ClonePixels(lib, 96, 64);
-        Color[] b = libPx != null ? libPx : PaintBase(v);
-        // Pecas da gramatica sempre procedurais por cima (layout deterministico).
-        DrawPieces(b, 96, 64, v);
-        t = Pixel.ToTexture(b, 96, 64);
+        Color[] b = Compose(worldSeed, islandId, arch, v);
+        t = Pixel.ToTexture(b, W, H);
         cache[key] = t;
         return t;
     }
 
-    static Color[] PaintBase(IslandVisual v)
+    static Texture2D Tex(string name)
     {
-        int W = 96, H = 64;
-        Color[] b = new Color[W * H];
-        Color shallow = new Color(0.20f, 0.50f, 0.62f);
-        Color sand = new Color(0.87f, 0.78f, 0.55f);
-        Color grass = new Color(0.32f, 0.58f, 0.28f);
-        Color forest = new Color(0.18f, 0.42f, 0.20f);
-        Color rock = new Color(0.50f, 0.48f, 0.45f);
-        Pixel.Fill(b, W, H, new Color(0, 0, 0, 0));
-
-        float cx = W / 2f, cy = H / 2f + 2;
-        float rx = 30 + (v.silhouette % 2) * 6;
-        float ry = 20 + (v.silhouette / 2) * 5;
-        Color in1 = grass, in2 = forest;
-        if (v.biome == "Arid") { in1 = new Color(0.80f, 0.68f, 0.42f); in2 = new Color(0.66f, 0.52f, 0.30f); }
-        else if (v.biome == "Cold") { in1 = new Color(0.82f, 0.85f, 0.88f); in2 = rock; }
-        else if (v.biome == "Temperate") { in1 = new Color(0.38f, 0.60f, 0.32f); in2 = forest; }
-        for (int x = 0; x < W; x++)
-        {
-            float wob = 1f + 0.12f * (float)System.Math.Sin(x * (1 + v.silhouette) * 0.35);
-            for (int yy = 0; yy < H; yy++)
-            {
-                float dx = (x - cx) / (rx * wob);
-                float dy = (yy - cy) / ry;
-                float dd = dx * dx + dy * dy;
-                int yTop = H - 1 - yy;
-                if (dd < 0.62) Pixel.Px(b, W, H, x, yTop, in2);
-                else if (dd < 0.85) Pixel.Px(b, W, H, x, yTop, in1);
-                else if (dd < 1.0) Pixel.Px(b, W, H, x, yTop, sand);
-                else if (dd < 1.15) Pixel.Px(b, W, H, x, yTop, shallow);
-            }
-        }
-        // (pecas vao por cima no Render via DrawPieces)
-        return b;
+        Texture2D t;
+        if (tiles.TryGetValue(name, out t)) return t;
+        t = Resources.Load<Texture2D>("Art/kenney/tiles/" + name);
+        tiles[name] = t;
+        return t;
     }
 
-    static void DrawPieces(Color[] b, int W, int H, IslandVisual v)
+    static Color[] PxOf(Texture2D t)
     {
+        if (t == null || t.width != T || t.height != T) return null;
+        return t.GetPixels();
+    }
+
+    // Blit de tile 16x16 em coords yTop (topo do tile). GetPixels: linha 0 = base.
+    static void Blit(Color[] b, Color[] s, int dx, int dyTop)
+    {
+        if (s == null) return;
+        for (int sy = 0; sy < T; sy++)
+        {
+            for (int sx = 0; sx < T; sx++)
+            {
+                Color c = s[sy * T + sx];
+                if (c.a < 0.5f) continue;
+                int x = dx + sx;
+                int yTop = dyTop + (T - 1 - sy);
+                if (x < 0 || x >= W || yTop < 0 || yTop >= H) continue;
+                b[(H - 1 - yTop) * W + x] = c;
+            }
+        }
+    }
+
+    static int HashStr(string s)
+    {
+        int h = 7;
+        for (int i = 0; i < s.Length; i++) h = h * 31 + s[i];
+        return h < 0 ? -h : h;
+    }
+
+    static string KindTile(string kind)
+    {
+        if (kind == "port" || kind == "dock") return "dock";
+        if (kind == "market") return "barrel";
+        if (kind == "house" || kind == "suburb") return "house";
+        if (kind == "farm" || kind == "field") return "dirt";
+        if (kind == "forest") return "tree";
+        if (kind == "trees") return "palm";
+        if (kind == "castle") return "castle";
+        if (kind == "plaza") return "sand";
+        if (kind == "church") return "cross";
+        if (kind == "gov") return "hut";
+        if (kind == "warehouse") return "chest";
+        if (kind == "tavern") return "bottle";
+        if (kind == "ruins") return "rock";
+        if (kind == "cave") return "cave";
+        if (kind == "boss") return "skull";
+        return null;
+    }
+
+    static float BlobR(float wx, float wy, float rad, float ph1, float ph2, float ph3)
+    {
+        float th = (float)System.Math.Atan2(wy / 0.82f, wx);
+        float edge = 1f + 0.28f * (float)System.Math.Sin(2 * th + ph1)
+            + 0.18f * (float)System.Math.Sin(3 * th + ph2)
+            + 0.10f * (float)System.Math.Sin(5 * th + ph3);
+        float ux = wx / rad;
+        float uy = wy / (rad * 0.82f);
+        float r = (float)System.Math.Sqrt(ux * ux + uy * uy);
+        return r / edge;
+    }
+
+    static Color[] Compose(int worldSeed, string islandId, IslandArchetype arch, IslandVisual v)
+    {
+        Color[] sea = PxOf(Tex("sea"));
+        Color[] sand = PxOf(Tex("sand"));
+        Color[] grass = PxOf(Tex("grass"));
+        if (sea == null || sand == null || grass == null) return Fallback(v);
+        Color[] b = new Color[W * H];
+        Pixel.Fill(b, W, H, new Color(0, 0, 0, 0));
+        float hw = 44 + (v.silhouette % 2) * 6;
+        bool[,] isGrass = new bool[N, N];
+        bool[,] busy = new bool[N, N];
+        Color cSea = new Color(92f / 255f, 89f / 255f, 124f / 255f);
+        Color cSand = new Color(142f / 255f, 139f / 255f, 183f / 255f);
+        Color cGrass = new Color(106f / 255f, 116f / 255f, 141f / 255f);
+        // Blob organico: raio com ruido angular por seed (nada de diamante).
+        int hh2 = HashStr(worldSeed + ":" + islandId + ":blob");
+        float ph1 = (hh2 % 628) / 100f;
+        float ph2 = ((hh2 / 7) % 628) / 100f;
+        float ph3 = ((hh2 / 13) % 628) / 100f;
+        float rad = 44 + (v.silhouette % 3) * 4;
+        // mar de fundo: transparente fora do blob (deck do mapa)
+        for (int qy = 0; qy < N; qy++)
+        {
+            for (int qx = 0; qx < N; qx++)
+            {
+                float wx = qx * T + 8 - 64f;
+                float wy = qy * T + 8 - 98f;
+                float rr = BlobR(wx, wy, rad, ph1, ph2, ph3);
+                if (rr > 1f) continue;
+                Color cc = rr < 0.62f ? cGrass : cSand;
+                if (rr < 0.62f) isGrass[qx, qy] = true;
+                for (int sy = 0; sy < T; sy++)
+                {
+                    for (int sx = 0; sx < T; sx++)
+                    {
+                        int x = qx * T + sx;
+                        int yTop = qy * T + sy;
+                        b[(H - 1 - yTop) * W + x] = cc;
+                    }
+                }
+            }
+        }
         for (int i = 0; i < v.pieces.Count; i++)
         {
             IslandPiece p = v.pieces[i];
-            int px = (int)(p.x * W);
-            int py = (int)(p.y * H);
-            DrawPiece(b, W, H, px, py, p.kind);
+            Color[] tp = PxOf(Tex(KindTile(p.kind) != null ? KindTile(p.kind) : "rock"));
+            if (tp == null) continue;
+            float fpx = p.x * W;
+            float fpy = p.y * H;
+            for (int k = 0; k < 4; k++)
+            {
+                float wx = fpx - 64f;
+                float wy = fpy - 98f;
+                if (BlobR(wx, wy, rad, ph1, ph2, ph3) < 0.95f) break;
+                fpx += (64f - fpx) * 0.25f;
+                fpy += (98f - fpy) * 0.25f;
+            }
+            int dx = (int)fpx - 8;
+            int dyTop = (int)fpy - 8;
+            Blit(b, tp, dx, dyTop);
+            int bx = (dx + 8) / T, by = (dyTop + 8) / T;
+            if (bx >= 0 && bx < N && by >= 0 && by < N) busy[bx, by] = true;
         }
+        System.Random rng = new System.Random(HashStr(worldSeed + ":" + islandId));
+        string[] acc = new string[] { "palm", "palm", "tree", "tree", "rock", "hill", "chest" };
+        if (arch == IslandArchetype.Dangerous) acc = new string[] { "palm", "tree", "rock", "hill", "chest", "skull", "skull" };
+        int nAcc = 4 + v.silhouette + (arch == IslandArchetype.Dangerous ? 2 : 0);
+        List<int[]> free = new List<int[]>();
+        for (int qy = 0; qy < N; qy++)
+        {
+            for (int qx = 0; qx < N; qx++)
+            {
+                if (isGrass[qx, qy] && !busy[qx, qy]) free.Add(new int[] { qx, qy });
+            }
+        }
+        for (int i = 0; i < nAcc && free.Count > 0; i++)
+        {
+            int k = rng.Next(free.Count);
+            int[] cell = free[k];
+            free.RemoveAt(k);
+            Color[] tp = PxOf(Tex(acc[rng.Next(acc.Length)]));
+            if (tp == null) continue;
+            Blit(b, tp, cell[0] * T, cell[1] * T);
+        }
+        return b;
     }
 
-    static void DrawPiece(Color[] b, int W, int H, int x, int yTop, string kind)
+    static Color[] Fallback(IslandVisual v)
     {
-        Color wood = new Color(0.45f, 0.30f, 0.16f);
-        Color wall = new Color(0.82f, 0.72f, 0.52f);
-        Color roof = new Color(0.65f, 0.22f, 0.16f);
-        Color gray = new Color(0.55f, 0.53f, 0.50f);
-        Color dark = new Color(0.16f, 0.14f, 0.12f);
-        Color leaf = new Color(0.16f, 0.40f, 0.18f);
-        Color gold = new Color(0.85f, 0.68f, 0.20f);
-        Color red = new Color(0.75f, 0.15f, 0.12f);
-        if (kind == "house" || kind == "suburb")
+        Color[] b = new Color[W * H];
+        Pixel.Fill(b, W, H, new Color(0, 0, 0, 0));
+        Color grass = new Color(0.45f, 0.55f, 0.70f);
+        Color sand = new Color(0.60f, 0.62f, 0.75f);
+        Color[] g = new Color[T * T];
+        Color[] s = new Color[T * T];
+        for (int i = 0; i < T * T; i++) { g[i] = grass; s[i] = sand; }
+        float rad = 40 + (v.silhouette % 3) * 4;
+        for (int qy = 0; qy < N; qy++)
         {
-            Pixel.Rect(b, W, H, x - 2, yTop - 2, 5, 4, wall);
-            Pixel.Rect(b, W, H, x - 3, yTop - 4, 7, 2, roof);
+            for (int qx = 0; qx < N; qx++)
+            {
+                float wx = qx * T + 8 - 64f;
+                float wy = qy * T + 8 - 98f;
+                float rr = BlobR(wx, wy, rad, 0.5f, 1.7f, 2.9f);
+                if (rr > 1f) continue;
+                Blit(b, rr < 0.62f ? g : s, qx * T, qy * T);
+            }
         }
-        else if (kind == "market") { Pixel.Rect(b, W, H, x - 3, yTop - 2, 7, 4, wall); Pixel.Rect(b, W, H, x - 3, yTop - 4, 7, 2, gold); }
-        else if (kind == "port" || kind == "dock") { Pixel.Rect(b, W, H, x - 4, yTop - 1, 9, 3, wood); Pixel.Rect(b, W, H, x - 3, yTop + 2, 1, 3, dark); Pixel.Rect(b, W, H, x + 3, yTop + 2, 1, 3, dark); }
-        else if (kind == "warehouse") { Pixel.Rect(b, W, H, x - 4, yTop - 3, 9, 5, wood); Pixel.Rect(b, W, H, x - 4, yTop - 5, 9, 2, Pixel.Shade(wood, 0.7f)); }
-        else if (kind == "tavern") { Pixel.Rect(b, W, H, x - 2, yTop - 2, 5, 4, wood); Pixel.Rect(b, W, H, x - 3, yTop - 4, 7, 2, roof); Pixel.Px(b, W, H, x, yTop - 1, gold); }
-        else if (kind == "castle") { Pixel.Rect(b, W, H, x - 4, yTop - 6, 9, 8, gray); Pixel.Rect(b, W, H, x - 6, yTop - 8, 3, 10, gray); Pixel.Rect(b, W, H, x + 4, yTop - 8, 3, 10, gray); Pixel.Px(b, W, H, x, yTop - 9, red); }
-        else if (kind == "church") { Pixel.Rect(b, W, H, x - 2, yTop - 3, 5, 5, new Color(0.92f, 0.90f, 0.84f)); Pixel.Rect(b, W, H, x, yTop - 6, 1, 3, gold); Pixel.Rect(b, W, H, x - 1, yTop - 5, 3, 1, gold); }
-        else if (kind == "gov") { Pixel.Rect(b, W, H, x - 3, yTop - 3, 7, 5, new Color(0.55f, 0.62f, 0.70f)); Pixel.Rect(b, W, H, x - 3, yTop - 5, 7, 2, gray); }
-        else if (kind == "plaza") { Pixel.Rect(b, W, H, x - 3, yTop - 2, 7, 4, new Color(0.78f, 0.74f, 0.62f)); }
-        else if (kind == "farm") { Pixel.Rect(b, W, H, x - 4, yTop - 2, 9, 4, new Color(0.45f, 0.62f, 0.25f)); Pixel.Rect(b, W, H, x - 4, yTop - 1, 9, 1, Pixel.Shade(leaf, 1.1f)); }
-        else if (kind == "forest") { Pixel.Rect(b, W, H, x - 3, yTop - 3, 7, 5, leaf); Pixel.Rect(b, W, H, x - 1, yTop - 2, 3, 3, Pixel.Shade(leaf, 0.7f)); }
-        else if (kind == "trees") { Pixel.Px(b, W, H, x, yTop, leaf); Pixel.Px(b, W, H, x + 2, yTop - 1, leaf); Pixel.Px(b, W, H, x - 2, yTop + 1, leaf); }
-        else if (kind == "ruins") { Pixel.Rect(b, W, H, x - 3, yTop - 1, 3, 3, gray); Pixel.Rect(b, W, H, x + 1, yTop - 2, 2, 4, gray); }
-        else if (kind == "cave") { Pixel.Rect(b, W, H, x - 3, yTop - 3, 7, 5, dark); Pixel.Rect(b, W, H, x - 1, yTop - 1, 3, 3, new Color(0.05f, 0.05f, 0.06f)); }
-        else if (kind == "boss") { Pixel.Rect(b, W, H, x - 2, yTop - 2, 5, 5, red); Pixel.Px(b, W, H, x - 1, yTop - 1, new Color(1, 1, 1)); Pixel.Px(b, W, H, x + 1, yTop - 1, new Color(1, 1, 1)); Pixel.Px(b, W, H, x, yTop, new Color(1, 1, 1)); }
-        else if (kind == "beach") { Pixel.Rect(b, W, H, x - 4, yTop - 1, 9, 3, new Color(0.87f, 0.78f, 0.55f)); }
+        return b;
     }
 }

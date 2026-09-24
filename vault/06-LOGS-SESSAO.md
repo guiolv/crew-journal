@@ -108,3 +108,7 @@
 - Screenshot mostrava botoes com miolo transparente + topbar sem icones. Causas: clean() comia regiao solida (band) + UIStyle.Get so olhava Art/UI (icones estao em Art/Icons).
 - Slicer refeito: deteccao por scipy, dissolve de texto em linhas, botoes reconstruidos (pontas + faixa + borda redesenhada + tint por estado). 26 assets limpos, conferidos no contact sheet.
 - ArtPostprocessor (9-slice + sem compressao), SkinButton/Card Sliced, topbar em chips com icones. Build + smoke limpos.
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Ilhas organicas (fim do diamante)
+- BlobR: raio com ruido angular (3 senos + fases por hash), silhouette so varia tamanho; pecas com pull-in p/ dentro do blob; Fallback igual.
+- Caveira so em Dangerous (scatter); raio 44-52. Preview confere costa irregular. Debug: base 'sumida' era engano de thumbnail - cells=6 provado em log.
