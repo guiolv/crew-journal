@@ -76,7 +76,8 @@ public static class IslandRenderer
         if (kind == "forest") return "tree";
         if (kind == "trees") return "palm";
         if (kind == "castle") return "castle";
-        if (kind == "plaza") return "sand";
+        if (kind == "plaza") return "sand_fill";
+        if (kind == "beach") return "sand_fill";
         if (kind == "church") return "cross";
         if (kind == "gov") return "hut";
         if (kind == "warehouse") return "chest";
@@ -125,8 +126,10 @@ public static class IslandRenderer
         float ph1 = (hh2 % 628) / 100f;
         float ph2 = ((hh2 / 7) % 628) / 100f;
         float ph3 = ((hh2 / 13) % 628) / 100f;
-        float rad = 36 + (v.silhouette % 3) * 4;
-        // mar de fundo: transparente fora do blob (deck do mapa)
+        float rad = 40 + (v.silhouette % 3) * 4;
+        // grade de terra + anel de areia com bitmask (agua vizinha)
+        bool[,] land = new bool[N, N];
+        float[,] rrm = new float[N, N];
         for (int qy = 0; qy < N; qy++)
         {
             for (int qx = 0; qx < N; qx++)
@@ -134,10 +137,33 @@ public static class IslandRenderer
                 float wx = qx * T + 8 - 64f;
                 float wy = qy * T + 8 - 98f;
                 float rr = BlobR(wx, wy, rad, ph1, ph2, ph3);
-                if (rr < 0.62f) isGrass[qx, qy] = true;
+                rrm[qx, qy] = rr;
+                if (rr < 1f) land[qx, qy] = true;
             }
         }
-        // base pintada por pixel (costa suave) em vez de celulas
+        Color[] sandFill = PxOf(Tex("sand_fill"));
+        for (int qy = 0; qy < N; qy++)
+        {
+            for (int qx = 0; qx < N; qx++)
+            {
+                if (!land[qx, qy]) continue;
+                if (sandFill != null) Blit(b, sandFill, qx * T, qy * T);
+                else
+                {
+                    for (int sy = 0; sy < T; sy++)
+                    {
+                        for (int sx = 0; sx < T; sx++)
+                        {
+                            int x = qx * T + sx;
+                            int yTop = qy * T + sy;
+                            b[(H - 1 - yTop) * W + x] = cSand;
+                        }
+                    }
+                }
+                if (rrm[qx, qy] < 0.55f) isGrass[qx, qy] = true;
+            }
+        }
+        // interior de grama chapada por pixel (costa suave com o anel)
         for (int yTop = 0; yTop < H; yTop++)
         {
             for (int x = 0; x < W; x++)
@@ -145,8 +171,38 @@ public static class IslandRenderer
                 float wx = x - 64f;
                 float wy = (float)yTop - 98f;
                 float rr = BlobR(wx, wy, rad, ph1, ph2, ph3);
-                if (rr > 1f) continue;
-                b[(H - 1 - yTop) * W + x] = rr < 0.62f ? cGrass : cSand;
+                if (rr < 0.55f) b[(H - 1 - yTop) * W + x] = cGrass;
+            }
+        }
+        // borda do anel: tile de transicao conforme agua vizinha
+        for (int qy = 0; qy < N; qy++)
+        {
+            for (int qx = 0; qx < N; qx++)
+            {
+                if (!land[qx, qy] || isGrass[qx, qy]) continue;
+                bool wN = qy == 0 || !land[qx, qy - 1];
+                bool wS = qy == N - 1 || !land[qx, qy + 1];
+                bool wW = qx == 0 || !land[qx - 1, qy];
+                bool wE = qx == N - 1 || !land[qx + 1, qy];
+                string tn = "sand_fill";
+                int n = (wN ? 1 : 0) + (wS ? 1 : 0) + (wW ? 1 : 0) + (wE ? 1 : 0);
+                if (n == 1)
+                {
+                    if (wN) tn = "sand_t";
+                    else if (wS) tn = "sand_b";
+                    else if (wW) tn = "sand_l";
+                    else tn = "sand_r";
+                }
+                else if (n == 2)
+                {
+                    if (wN && wW) tn = "sand_tl";
+                    else if (wN && wE) tn = "sand_tr";
+                    else if (wS && wW) tn = "sand_bl";
+                    else if (wS && wE) tn = "sand_br";
+                }
+                Color[] tp = PxOf(Tex(tn));
+                if (tp == null) continue;
+                Blit(b, tp, qx * T, qy * T);
             }
         }
         for (int i = 0; i < v.pieces.Count; i++)
@@ -224,8 +280,8 @@ public static class IslandRenderer
             if (tp == null) continue;
             Blit(b, tp, cell[0] * T, cell[1] * T);
         }
-        // espuma: pixels de areia vizinhos ao mar ficam claros (contorno da ref)
-        Color foam = new Color(200f / 255f, 200f / 255f, 225f / 255f);
+        // contorno escuro na beira (como nas refs) em vez de espuma clara
+        Color edgeCol = new Color(40f / 255f, 40f / 255f, 80f / 255f);
         Color sandRef = new Color(142f / 255f, 139f / 255f, 183f / 255f);
         for (int yTop = 0; yTop < H; yTop++)
         {
@@ -239,7 +295,7 @@ public static class IslandRenderer
                 if (x < W - 1 && b[(H - 1 - yTop) * W + x + 1].a <= 0.5f) edge = true;
                 if (yTop > 0 && b[(H - yTop) * W + x].a <= 0.5f) edge = true;
                 if (yTop < H - 1 && b[(H - 2 - yTop) * W + x].a <= 0.5f) edge = true;
-                if (edge) b[(H - 1 - yTop) * W + x] = foam;
+                if (edge) b[(H - 1 - yTop) * W + x] = edgeCol;
             }
         }
         return b;

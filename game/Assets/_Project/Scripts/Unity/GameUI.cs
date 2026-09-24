@@ -50,6 +50,55 @@ public class GameUI : MonoBehaviour
         Refresh();
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F12))
+        {
+            StartCoroutine(Shot());
+        }
+    }
+
+    System.Collections.IEnumerator Shot()
+    {
+        yield return new WaitForEndOfFrame();
+        Texture2D t = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+        t.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
+        t.Apply();
+        string p = Application.persistentDataPath + "/shot.bmp";
+        System.IO.File.WriteAllBytes(p, ToBmp(t));
+        Destroy(t);
+        msg = "Screenshot: " + p;
+        Refresh();
+    }
+
+    static byte[] ToBmp(Texture2D t)
+    {
+        Color[] px = t.GetPixels();
+        int w = t.width, h = t.height;
+        int row = ((w * 3 + 3) / 4) * 4;
+        byte[] bmp = new byte[54 + row * h];
+        bmp[0] = 66; bmp[1] = 77;
+        bmp[10] = 54;
+        bmp[14] = 40;
+        bmp[18] = (byte)(w & 255); bmp[19] = (byte)((w >> 8) & 255);
+        bmp[20] = (byte)((w >> 16) & 255); bmp[21] = (byte)((w >> 24) & 255);
+        bmp[22] = (byte)(h & 255); bmp[23] = (byte)((h >> 8) & 255);
+        bmp[24] = (byte)((h >> 16) & 255); bmp[25] = (byte)((h >> 24) & 255);
+        bmp[26] = 1; bmp[28] = 24;
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                Color c = px[y * w + x];
+                int o = 54 + y * row + x * 3;
+                bmp[o] = (byte)(c.b * 255);
+                bmp[o + 1] = (byte)(c.g * 255);
+                bmp[o + 2] = (byte)(c.r * 255);
+            }
+        }
+        return bmp;
+    }
+
     // ================= estrutura =================
     void Build()
     {
@@ -824,7 +873,7 @@ public class GameUI : MonoBehaviour
         rt.anchorMin = new Vector2(ax, ay);
         rt.anchorMax = new Vector2(ax, ay);
         rt.anchoredPosition = Vector2.zero;
-        rt.sizeDelta = new Vector2(170, 152);
+        rt.sizeDelta = new Vector2(230, 214);
         GameObject im = new GameObject("Pic");
         im.transform.SetParent(go.transform, false);
         Image img = im.AddComponent<Image>();
@@ -833,8 +882,8 @@ public class GameUI : MonoBehaviour
         RectTransform irt = im.GetComponent<RectTransform>();
         irt.anchorMin = new Vector2(0, 1);
         irt.anchorMax = new Vector2(1, 1);
-        irt.offsetMin = new Vector2(27, -120);
-        irt.offsetMax = new Vector2(-27, -4);
+        irt.offsetMin = new Vector2(30, -174);
+        irt.offsetMax = new Vector2(-30, -4);
         GameObject lab = new GameObject("Name");
         lab.transform.SetParent(go.transform, false);
         Text tx = lab.AddComponent<Text>();
