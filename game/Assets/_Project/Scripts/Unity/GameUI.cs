@@ -222,14 +222,24 @@ public class GameUI : MonoBehaviour
         sea.transform.SetParent(content, false);
         Image simg = sea.AddComponent<Image>();
         simg.color = Sea;
-        Sprite sea0 = UIStyle.Get("sea_0");
-        if (sea0 != null)
+        System.Random srng = new System.Random(d.world.day * 13 + 7);
+        for (int si = 0; si < 22; si++)
         {
-            simg.sprite = sea0;
-            simg.color = Color.white;
-            simg.type = Image.Type.Tiled;
-            int t = animToken;
-            Juice.Frames(simg, new string[] { "sea_0", "sea_1", "sea_2", "sea_3" }, 0.4f, delegate { return animToken == t; });
+            Sprite sp = UIStyle.Get(srng.Next(2) == 0 ? "speckle_0" : "speckle_1");
+            if (sp == null) break;
+            GameObject dot = new GameObject("Spk");
+            dot.transform.SetParent(sea.transform, false);
+            Image di = dot.AddComponent<Image>();
+            di.sprite = sp;
+            di.raycastTarget = false;
+            RectTransform drt = dot.GetComponent<RectTransform>();
+            float sax = (float)srng.NextDouble();
+            float say = (float)srng.NextDouble();
+            drt.anchorMin = new Vector2(sax, say);
+            drt.anchorMax = new Vector2(sax, say);
+            drt.anchoredPosition = Vector2.zero;
+            int ss = 10 + srng.Next(8);
+            drt.sizeDelta = new Vector2(ss, ss);
         }
         LayoutElement sle = sea.AddComponent<LayoutElement>();
         sle.minHeight = 430;

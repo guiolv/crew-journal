@@ -120,3 +120,7 @@
 ## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Costa suave + espuma (refs Kenney)
 - Comparacao honesta com refs: gap era autotile de costa. Sem mapear 47 transicoes no escuro: base por pixel (curvas suaves) + espuma procedural na areia + clareiras de terra sob povoados + marcas d'agua esparsas.
 - Raio 36-44 p/ nao clipar. Preview confere. Build em curso.
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Mar limpo + screenshot proprio
+- Mar com faixas: tile P0006 tem listras internas. Troca por mar chapado + 22 marcas d'agua esparsas (speckle_0/1). F12 com BMP manual (ScreenCapture/EncodeToPNG ausentes neste install).
+- Screenshot via foco+PrintScreen confirma: aneis de areia, espuma/contorno, icones, fonte pixel, botoes. Nao commitei arquivos da outra sessao (icons M + deletes).
