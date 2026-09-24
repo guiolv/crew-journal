@@ -1,7 +1,8 @@
 # 04 — Tarefas
 
 ## Em progresso
-- [ ] Playtest manual do loop completo no `Build/crew-journal.exe` (usuário) — build atual já tem visuais v0.3
+- [ ] Mapa com ilhas desenhadas + nome abaixo (sessão atual): MapIsland no lugar do MapPin — build em curso, falta screenshot do usuário
+- [ ] Playtest manual do loop completo no `Build/crew-journal.exe` (usuário)
 - [x] DESIGN fixes (skill): stance, em-jogo, ferido grave, vínculos — lógica 36/36, type-check 0, build 22:22 em verificação (playtest engine a seguir)
 - [ ] Gerador local de sprites (IA): scaffold pronto (`tools/sprite-gen/` + `IPartSource`); falta instalar Python + ComfyUI e gerar os 49 PNGs
 - [ ] Biblioteca IA completa (72 PNGs: 49 sprites + 23 UI) — gerador estendido, `UIStyle.cs` fiado no `GameUI` com fallback; downloads ComfyUI AMD + SD1.5 + LoRA em andamento, geração a seguir

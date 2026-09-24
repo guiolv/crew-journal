@@ -173,8 +173,8 @@ public class GameUI : MonoBehaviour
             if (ay > 0.95f) ay = 0.95f;
             string id = isl.id;
             bool here = isl.id == d.currentIslandId;
-            string label = (here ? ">> " : "") + isl.displayName + "\n[" + isl.archetype + "] P" + isl.danger;
-            MapPin(seaRt, ax, ay, 200, 66, label, here ? Gold : TealDark, isl.archetype, delegate
+            Texture2D itex = IslandRenderer.Render(d.world.seed, isl.id, isl.archetype);
+            MapIsland(seaRt, ax, ay, itex, isl.displayName, isl.danger, here, delegate
             {
                 if (!here)
                 {
@@ -784,20 +784,48 @@ public class GameUI : MonoBehaviour
         MkBtnText(go, label, 17);
     }
 
-    void MapPin(RectTransform sea, float ax, float ay, float w, float h, string label, Color bg, IslandArchetype arch, Action onClick)
+    void MapIsland(RectTransform sea, float ax, float ay, Texture2D tex, string name, int danger, bool here, Action onClick)
     {
-        GameObject go = new GameObject("Pin");
+        GameObject go = new GameObject("Isl");
         go.transform.SetParent(sea, false);
-        Image img = go.AddComponent<Image>();
-        img.color = bg;
-        UIStyle.PinIcon(go, arch);
-        go.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
-        RectTransform rt = go.GetComponent<RectTransform>();
+        RectTransform rt = go.AddComponent<RectTransform>();
         rt.anchorMin = new Vector2(ax, ay);
         rt.anchorMax = new Vector2(ax, ay);
         rt.anchoredPosition = Vector2.zero;
-        rt.sizeDelta = new Vector2(w, h);
-        MkBtnText(go, label, 14);
+        rt.sizeDelta = new Vector2(170, 152);
+        GameObject frame = new GameObject("Frame");
+        frame.transform.SetParent(go.transform, false);
+        Image fimg = frame.AddComponent<Image>();
+        fimg.color = here ? Gold : Panel;
+        RectTransform frt = frame.GetComponent<RectTransform>();
+        frt.anchorMin = new Vector2(0, 1);
+        frt.anchorMax = new Vector2(1, 1);
+        frt.offsetMin = new Vector2(0, -120);
+        frt.offsetMax = new Vector2(0, -4);
+        GameObject im = new GameObject("Pic");
+        im.transform.SetParent(go.transform, false);
+        Image img = im.AddComponent<Image>();
+        img.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+        im.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
+        RectTransform irt = im.GetComponent<RectTransform>();
+        irt.anchorMin = new Vector2(0, 1);
+        irt.anchorMax = new Vector2(1, 1);
+        irt.offsetMin = new Vector2(4, -116);
+        irt.offsetMax = new Vector2(-4, -8);
+        GameObject lab = new GameObject("Name");
+        lab.transform.SetParent(go.transform, false);
+        Text tx = lab.AddComponent<Text>();
+        tx.font = font;
+        tx.fontSize = 14;
+        tx.color = here ? Gold : Color.white;
+        tx.alignment = TextAnchor.UpperCenter;
+        tx.text = (here ? ">> " : "") + name + "\nPerigo " + danger;
+        lab.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
+        RectTransform lrt = lab.GetComponent<RectTransform>();
+        lrt.anchorMin = new Vector2(0, 0);
+        lrt.anchorMax = new Vector2(1, 0);
+        lrt.offsetMin = new Vector2(-15, 0);
+        lrt.offsetMax = new Vector2(15, 32);
     }
 
     void PortraitImage(Transform parent, float w, float h, Texture tex)
