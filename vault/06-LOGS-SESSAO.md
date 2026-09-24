@@ -72,6 +72,12 @@
 - Fundo do sprite passou a transparente (só ilha + auréola rasa); moldura removida do mapa. Atual = nome dourado + `>>`.
 - Verificação: preview PNG confere transparência, build + smoke limpos.
 
+## 2026-09-24 — ses_f441bb278ffeK6WjqT2ncewDl3 — Assets das refs fatiados e fiados no jogo
+- `tools/slice-sheets/slice.py`: flood-fill com seeds inteligentes + dissolve de texto em linhas + botões reconstruídos sem texto + tone-match; 37 PNGs em `Assets/Resources/Art/{UI,Icons,Islands,Ships}` (+flip p/ variantes).
+- `ArtPostprocessor.cs`: sprite single, sem compressão, 9-slice em btn_*/panel_*; SkinButton/SkinCard → Sliced; topbar virou chips com ícones (moeda/comida/água/madeira-texto/remédio/navio).
+- Diagnóstico "não vejo/ouço nada": assets estavam em Temp/vault, nunca importados — primeiro build com eles é este (00:52, .resS 2.7MB + .resource 3.5MB). Exe com data 20/09 é normal (Unity só reescreve arquivos alterados; o jogo está em _Data). Música: clip carrega (playtest music-map) e `PlayMap` roda no Awake — se inaudível, checar toggle SOM + mixer do Windows.
+- Madeira sem ícone na sheet (fallback texto); retratos modulares continuam procedurais (bustos; sheets são corpo inteiro).
+
 ## 2026-09-24 — ses_f441bb278ffeK6WjqT2ncewDl3 — Isométrico verificado (outra sessão fez, eu integrei)
 - Mudança top-down→isométrico veio da outra sessão (`Iso.cs` + `IslandRenderer` diamante com penhascos + pins `Iso.Pin`); encontrei e reconciliei 1 conflito: o rewrite dela tinha voltado o fundo azul chapado — reapliquei transparente (só ilha + auréola).
 - Verificação: CHECK 0 (Runtime+Editor), preview do diamante conferido a olho, build 23:45, smoke limpo.

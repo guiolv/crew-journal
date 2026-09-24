@@ -20,7 +20,7 @@ public class GameUI : MonoBehaviour
 
     GameManager gm;
     Font font;
-    Text topBar;
+    Text topDay, topMoney, topFood, topWater, topWood, topMed, topTrip;
     Text logText;
     RectTransform content;
     CanvasGroup contentFade;
@@ -57,10 +57,21 @@ public class GameUI : MonoBehaviour
         s.referenceResolution = new Vector2(1280, 720);
         canvas.AddComponent<GraphicRaycaster>();
 
-        topBar = MkText(canvas.transform, 20);
-        topBar.alignment = TextAnchor.MiddleLeft;
-        topBar.color = Gold;
-        Rect(topBar.gameObject, 0, 1, 1, 1, 10, -42, -10, -4);
+        GameObject top = new GameObject("TopBar");
+        top.transform.SetParent(canvas.transform, false);
+        Rect(top, 0, 1, 1, 1, 6, -44, -6, -4);
+        HorizontalLayoutGroup thg = top.AddComponent<HorizontalLayoutGroup>();
+        thg.spacing = 12;
+        thg.padding = new RectOffset(8, 8, 4, 4);
+        thg.childControlWidth = false;
+        thg.childForceExpandWidth = false;
+        topDay = TopChip(top.transform, null);
+        topMoney = TopChip(top.transform, "icon_coin");
+        topFood = TopChip(top.transform, "icon_food");
+        topWater = TopChip(top.transform, "icon_water");
+        topWood = TopChip(top.transform, null);
+        topMed = TopChip(top.transform, "icon_medicine");
+        topTrip = TopChip(top.transform, "icon_ship");
 
         logText = MkText(canvas.transform, 15);
         Rect(logText.gameObject, 0, 0, 1, 0, 10, 66, -10, 168);
@@ -118,10 +129,13 @@ public class GameUI : MonoBehaviour
         int money = d.GetResource(ResourceId.Money);
         if (prevMoney >= 0 && money > prevMoney) Sfx.Coin();
         prevMoney = money;
-        topBar.text = string.Format("Dia {0}  |  {1}$  |  Comida {2}  Agua {3}  Mad {4}  Metal {5}  Med {6}  |  {7} {8}/{9}  |  Trip {10}/{11}",
-            d.world.day, d.GetResource(ResourceId.Money), d.GetResource(ResourceId.Food), d.GetResource(ResourceId.Water),
-            d.GetResource(ResourceId.Wood), d.GetResource(ResourceId.Metal), d.GetResource(ResourceId.Medicine),
-            d.ship.defId, d.ship.hull, d.ship.maxHull, GameSession.AliveCrew(d), ShipModules.EffectiveCrewCap(d.ship));
+        topDay.text = "Dia " + d.world.day;
+        topMoney.text = money + "$";
+        topFood.text = "Comida " + d.GetResource(ResourceId.Food);
+        topWater.text = "Agua " + d.GetResource(ResourceId.Water);
+        topWood.text = "Mad " + d.GetResource(ResourceId.Wood);
+        topMed.text = "Med " + d.GetResource(ResourceId.Medicine);
+        topTrip.text = "Trip " + GameSession.AliveCrew(d) + "/" + ShipModules.EffectiveCrewCap(d.ship);
         int from = Math.Max(0, d.journal.Count - 3);
         string log = "";
         for (int i = from; i < d.journal.Count; i++) log += "[d" + d.journal[i].day + "] " + d.journal[i].text + "\n";
@@ -886,6 +900,40 @@ public class GameUI : MonoBehaviour
             if (name.StartsWith(pool[i])) return i;
         }
         return 0;
+    }
+
+    Text TopChip(Transform parent, string iconKey)
+    {
+        GameObject go = new GameObject("Chip");
+        go.transform.SetParent(parent, false);
+        HorizontalLayoutGroup hg = go.AddComponent<HorizontalLayoutGroup>();
+        hg.spacing = 4;
+        hg.childControlWidth = false;
+        hg.childForceExpandWidth = false;
+        ContentSizeFitter cf = go.AddComponent<ContentSizeFitter>();
+        cf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        if (iconKey != null)
+        {
+            Sprite s = UIStyle.Get(iconKey);
+            if (s != null)
+            {
+                GameObject io = new GameObject("Ic");
+                io.transform.SetParent(go.transform, false);
+                Image img = io.AddComponent<Image>();
+                img.sprite = s;
+                img.raycastTarget = false;
+                LayoutElement le = io.AddComponent<LayoutElement>();
+                le.minWidth = 26;
+                le.minHeight = 26;
+                le.preferredWidth = 26;
+                le.preferredHeight = 26;
+            }
+        }
+        Text tx = MkText(go.transform, 18);
+        tx.color = Gold;
+        ContentSizeFitter tf = tx.gameObject.AddComponent<ContentSizeFitter>();
+        tf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        return tx;
     }
 
     void Rect(GameObject go, float ax0, float ay0, float ax1, float ay1, float ox0, float oy0, float ox1, float oy1)
