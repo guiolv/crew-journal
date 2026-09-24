@@ -68,6 +68,10 @@
 - Pedido do usuário: desenho da ilha no mapa + nome abaixo. `MapPin` (botão de texto) → `MapIsland`: moldura (dourada = atual), desenho 162x108 clicável, nome + perigo abaixo (clicável).
 - Verificação: CHECK-B 0, build 22:46, smoke limpo. Push 7eb221f5. Aguardando screenshot.
 
+## 2026-09-23 — ses_f441bb278ffeK6WjqT2ncewDl3 — Ilhas sem moldura, no mar
+- Fundo do sprite passou a transparente (só ilha + auréola rasa); moldura removida do mapa. Atual = nome dourado + `>>`.
+- Verificação: preview PNG confere transparência, build + smoke limpos.
+
 ## 2026-09-23 — ses_f441bb278ffeK6WjqT2ncewDl3 — Lens review da skill `skills/`
 - Rodada skill game-design (Schell) em modo REVIEW sobre crew-journal → `vault/08-LENS-REVIEW.md`.
 - Resultado: 6 perspectivas (A/C/D/F/G/H); 6 tensões, maior risco = permadeath sem apego/causa legível; 3 alternativas (A capitão ativo, B morte em 2 etapas, C vínculos primeiro); protocolo de playtest de 30 min com 6 perguntas (serve o playtest pendente de 04-TAREFAS); questões abertas (balanceamento GED sem sessão real).

@@ -793,15 +793,6 @@ public class GameUI : MonoBehaviour
         rt.anchorMax = new Vector2(ax, ay);
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = new Vector2(170, 152);
-        GameObject frame = new GameObject("Frame");
-        frame.transform.SetParent(go.transform, false);
-        Image fimg = frame.AddComponent<Image>();
-        fimg.color = here ? Gold : Panel;
-        RectTransform frt = frame.GetComponent<RectTransform>();
-        frt.anchorMin = new Vector2(0, 1);
-        frt.anchorMax = new Vector2(1, 1);
-        frt.offsetMin = new Vector2(0, -120);
-        frt.offsetMax = new Vector2(0, -4);
         GameObject im = new GameObject("Pic");
         im.transform.SetParent(go.transform, false);
         Image img = im.AddComponent<Image>();

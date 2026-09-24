@@ -13,22 +13,29 @@ public static class IslandRenderer
         Texture2D t;
         if (cache.TryGetValue(key, out t)) return t;
         IslandVisual v = VisualDNA.Island(worldSeed, islandId, arch);
-        t = Draw(v);
+        Texture2D lib;
+        Color[] libPx = null;
+        if (PartSources.Current != null
+            && PartSources.Current.TryGet("Islands", SpriteLib.IslandKey(arch, v.silhouette), out lib))
+            libPx = Pixel.ClonePixels(lib, 96, 64);
+        Color[] b = libPx != null ? libPx : PaintBase(v);
+        // Pecas da gramatica sempre procedurais por cima (layout deterministico).
+        DrawPieces(b, 96, 64, v);
+        t = Pixel.ToTexture(b, 96, 64);
         cache[key] = t;
         return t;
     }
 
-    static Texture2D Draw(IslandVisual v)
+    static Color[] PaintBase(IslandVisual v)
     {
         int W = 96, H = 64;
         Color[] b = new Color[W * H];
-        Color deep = new Color(0.08f, 0.25f, 0.42f);
         Color shallow = new Color(0.20f, 0.50f, 0.62f);
         Color sand = new Color(0.87f, 0.78f, 0.55f);
         Color grass = new Color(0.32f, 0.58f, 0.28f);
         Color forest = new Color(0.18f, 0.42f, 0.20f);
         Color rock = new Color(0.50f, 0.48f, 0.45f);
-        Pixel.Fill(b, W, H, deep);
+        Pixel.Fill(b, W, H, new Color(0, 0, 0, 0));
 
         float cx = W / 2f, cy = H / 2f + 2;
         float rx = 30 + (v.silhouette % 2) * 6;
@@ -52,7 +59,12 @@ public static class IslandRenderer
                 else if (dd < 1.15) Pixel.Px(b, W, H, x, yTop, shallow);
             }
         }
-        // pecas por zona (y gramatica 0=cima -> yTop direto)
+        // (pecas vao por cima no Render via DrawPieces)
+        return b;
+    }
+
+    static void DrawPieces(Color[] b, int W, int H, IslandVisual v)
+    {
         for (int i = 0; i < v.pieces.Count; i++)
         {
             IslandPiece p = v.pieces[i];
@@ -60,7 +72,6 @@ public static class IslandRenderer
             int py = (int)(p.y * H);
             DrawPiece(b, W, H, px, py, p.kind);
         }
-        return Pixel.ToTexture(b, W, H);
     }
 
     static void DrawPiece(Color[] b, int W, int H, int x, int yTop, string kind)
