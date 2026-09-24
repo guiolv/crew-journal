@@ -170,11 +170,39 @@ public static class LogicTests
         while (!sa.over && rounds < 200)
         {
             rounds++;
+            while (!sa.over && sa.EnemyTurnPending()) sa.StepEnemy();
+            if (sa.over) break;
             CharacterData cur = sa.CurrentCrew();
             if (cur == null) break;
             sa.Act(BattleAction.Attack, 0);
         }
         Check(sa.over, "battle-terminates");
+
+        // Granularidade: inimigos resolvem um por vez, não em bloco.
+        GameData gd = GameSession.NewGame(300);
+        CharacterData fast = gd.crew[0];
+        fast.stats.speed = 99;
+        fast.stats.hp = fast.stats.maxHp;
+        List<CharacterData> gq = new List<CharacterData>();
+        gq.Add(fast);
+        List<EnemyData> gqe = new List<EnemyData>();
+        for (int e = 0; e < 2; e++)
+        {
+            EnemyData en = new EnemyData();
+            en.name = "Dummy " + e;
+            en.hp = 50;
+            en.maxHp = 50;
+            en.atk = 2;
+            en.def = 0;
+            en.speed = 1;
+            gqe.Add(en);
+        }
+        BattleState st = BattleState.Start(gq, gqe, 0, 0, 31337);
+        st.Act(BattleAction.Defend, 0);
+        Check(st.EnemyTurnPending(), "step-pending");
+        int lb = st.log.Count;
+        st.StepEnemy();
+        Check(st.log.Count == lb + 1 && (st.EnemyTurnPending() || st.over), "step-single");
 
         // 14. Modulos: barril recusa, barco aceita, slots respeitados
         GameData g11 = GameSession.NewGame(55);
@@ -207,6 +235,8 @@ public static class LogicTests
         while (!bst.over && guardb < 200)
         {
             guardb++;
+            while (!bst.over && bst.EnemyTurnPending()) bst.StepEnemy();
+            if (bst.over) break;
             if (bst.CurrentCrew() == null) break;
             bst.Act(BattleAction.Defend, 0);
         }

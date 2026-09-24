@@ -226,6 +226,8 @@ O navio navega automaticamente.
 
 A viagem é calculada pelo sistema.
 
+Após o evento da viagem resolvido, o jogador pode apressar o restante (velas a todo pano) — o risco já ocorreu, resta só a espera.
+
 ---
 
 # 8. Fatores da navegação

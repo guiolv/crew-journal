@@ -82,7 +82,7 @@ namespace CrewJournal.Logic
 
         public CharacterData CurrentCrew()
         {
-            AdvanceAuto();
+            SkipDead();
             if (over || ptr >= queue.Count) return null;
             object o = queue[ptr];
             if (o is CharacterData)
@@ -93,7 +93,8 @@ namespace CrewJournal.Logic
             return null;
         }
 
-        private void AdvanceAuto()
+        // Avanca o ponteiro sobre entradas mortas sem executar acoes (sem RNG).
+        private void SkipDead()
         {
             int guard = 0;
             while (!over && ptr < queue.Count && guard < 40)
@@ -107,15 +108,44 @@ namespace CrewJournal.Logic
                     ptr++;
                     continue;
                 }
-                EnemyAct((EnemyData)o);
+                if (((EnemyData)o).hp > 0) return;
                 ptr++;
-                if (ptr >= queue.Count)
-                {
-                    round++;
-                    Rebuild();
-                    Log("Round " + round + ".");
-                }
             }
+            if (!over && ptr >= queue.Count)
+            {
+                round++;
+                Rebuild();
+                Log("Round " + round + ".");
+            }
+        }
+
+        // Ha acao inimiga pendente para resolver passo a passo (UI ritmada)?
+        public bool EnemyTurnPending()
+        {
+            if (over) return false;
+            SkipDead();
+            if (over || ptr >= queue.Count) return false;
+            return !(queue[ptr] is CharacterData);
+        }
+
+        // Executa UMA acao inimiga. Retorna a linha de log gerada (ou "").
+        public string StepEnemy()
+        {
+            if (over) return "";
+            SkipDead();
+            if (over || ptr >= queue.Count) return "";
+            if (queue[ptr] is CharacterData) return "";
+            int before = log.Count;
+            EnemyAct((EnemyData)queue[ptr]);
+            ptr++;
+            if (ptr >= queue.Count && !over)
+            {
+                round++;
+                Rebuild();
+                Log("Round " + round + ".");
+            }
+            if (log.Count > before) return log[log.Count - 1];
+            return "";
         }
 
         private CharacterData WeakestCrew()

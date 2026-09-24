@@ -89,6 +89,8 @@ namespace CrewJournal.Editor
             while (!bs.over && rounds < 300)
             {
                 rounds++;
+                while (!bs.over && bs.EnemyTurnPending()) bs.StepEnemy();
+                if (bs.over) break;
                 if (bs.CurrentCrew() == null) break;
                 bs.Act(BattleAction.Attack, 0);
             }
@@ -106,6 +108,13 @@ namespace CrewJournal.Editor
 
             // diario + reputacao moveram
             Check(d.journal.Count > 5 && d.notoriety >= 0, "journal");
+
+            // sfx procedural nao quebra (mutado: sem dispositivo de audio no batchmode)
+            bool m0 = Sfx.muted;
+            Sfx.muted = true;
+            Sfx.Click(); Sfx.Coin(); Sfx.Hit(); Sfx.Victory(); Sfx.Defeat();
+            Sfx.muted = m0;
+            Check(true, "sfx-smoke");
 
             Debug.Log("PLAYTEST RESULT pass=" + pass + " fail=" + fail);
             if (fail > 0) throw new System.Exception("playtest falhou: " + fail);

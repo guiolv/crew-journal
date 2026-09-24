@@ -3,12 +3,14 @@
 ## Em progresso
 - [ ] Mapa com ilhas desenhadas + nome abaixo (sessão atual): MapIsland no lugar do MapPin — build em curso, falta screenshot do usuário
 - [ ] Playtest manual do loop completo no `Build/crew-journal.exe` (usuário)
-- [x] DESIGN fixes (skill): stance, em-jogo, ferido grave, vínculos — lógica 36/36, type-check 0, build 22:22 em verificação (playtest engine a seguir)
+- [x] DESIGN fixes (skill): stance, em-jogo, ferido grave, vínculos — lógica 36/36, type-check 0, build 22:22, playtest 13/13, smoke limpo
+- [x] Game-feel audit itens 1-4: fast-forward, inimigos ritmados (StepEnemy), SFX procedurais + mute, tradeoff da medicina — lógica 38/38, type-check 0, build 23:08, playtest 14/14 (sfx-smoke), smoke limpo
 - [ ] Gerador local de sprites (IA): scaffold pronto (`tools/sprite-gen/` + `IPartSource`); falta instalar Python + ComfyUI e gerar os 49 PNGs
 - [ ] Biblioteca IA completa (72 PNGs: 49 sprites + 23 UI) — gerador estendido, `UIStyle.cs` fiado no `GameUI` com fallback; downloads ComfyUI AMD + SD1.5 + LoRA em andamento, geração a seguir
+- [x] 2026-09-23 — Mapa isométrico 2:1 (`Iso.cs` + `IslandRenderer` diamante com penhascos + pins via `Iso.Pin`); lógica x,y intacta; csc 0 erros
 
 ## Backlog
-- [ ] 5 eventos marítimos → ~10 (GDD fala ~10; hoje: tempestade, abandonado, desconhecido, criatura, calmaria)
+- [ ] 6 eventos marítimos → ~10 (GDD fala ~10; hoje: tempestade, abandonado, desconhecido, criatura, redemoinho, calmaria)
 - [ ] Habilidades de combate por função (hoje só golpe pesado genérico)
 - [ ] História de personagem em 2-3 linhas (hoje 1 linha via BioFor)
 

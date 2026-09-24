@@ -22,8 +22,11 @@ public class GameManager : MonoBehaviour
     public string EventChoiceText = "";
     public string LastBattleText = "";
     public VoyageReport LastVoyage;
+    public float sailTick = 1.1f;
+    public bool stepping;
 
     public event Action OnChanged;
+    public event Action OnEnemyHit;
 
     void Awake()
     {
@@ -57,6 +60,8 @@ public class GameManager : MonoBehaviour
         EventChoiceText = "";
         LastBattleText = "";
         LastVoyage = null;
+        sailTick = 1.1f;
+        stepping = false;
         Notify();
     }
 
@@ -98,7 +103,13 @@ public class GameManager : MonoBehaviour
             return;
         }
         EventChoiceText = rep.eventText;
+        sailTick = 1.1f;
         StartCoroutine(SailRoutine());
+    }
+
+    public void FastForward()
+    {
+        if (State == GameState.Sailing) sailTick = 0.25f;
     }
 
     IEnumerator SailRoutine()
@@ -107,7 +118,7 @@ public class GameManager : MonoBehaviour
         Notify();
         while (true)
         {
-            yield return new WaitForSeconds(1.1f);
+            yield return new WaitForSeconds(sailTick);
             VoyageReport t = GameSession.TravelTick(Data);
             LastVoyage = t;
             if (t.tick == TickResult.NeedChoice)
@@ -167,19 +178,46 @@ public class GameManager : MonoBehaviour
         PendingCombatDanger = danger;
         State = GameState.Combat;
         Notify();
+        if (Battle.CurrentCrew() == null && !Battle.over) StartCoroutine(EnemySteps());
     }
 
     public void BattleAct(BattleAction a, int target)
     {
-        if (Battle == null || State != GameState.Combat) return;
+        if (Battle == null || State != GameState.Combat || stepping) return;
         LastBattleText = Battle.Act(a, target);
         Data.SetResource(ResourceId.Medicine, Math.Max(0, Battle.medicines - Battle.medicinesUsed));
         if (Battle.over)
         {
-            LastBattleText = GameSession.FinishBattle(Data, Battle.party, Battle.DeadIds(), Battle.victory, Battle.fled, PendingCombatDanger, Battle.log);
-            Battle = null;
-            State = GameSession.IsGameOver(Data) ? GameState.GameOver : GameState.Island;
+            EndBattle();
+            return;
         }
+        Notify();
+        StartCoroutine(EnemySteps());
+    }
+
+    IEnumerator EnemySteps()
+    {
+        stepping = true;
+        while (Battle != null && !Battle.over && Battle.EnemyTurnPending())
+        {
+            yield return new WaitForSeconds(0.35f);
+            if (Battle == null || Battle.over) break;
+            Battle.StepEnemy();
+            if (OnEnemyHit != null) OnEnemyHit();
+            Notify();
+        }
+        stepping = false;
+        if (Battle != null && Battle.over) EndBattle();
+        else Notify();
+    }
+
+    void EndBattle()
+    {
+        if (Battle.victory) Sfx.Victory();
+        else if (!Battle.fled) Sfx.Defeat();
+        LastBattleText = GameSession.FinishBattle(Data, Battle.party, Battle.DeadIds(), Battle.victory, Battle.fled, PendingCombatDanger, Battle.log);
+        Battle = null;
+        State = GameSession.IsGameOver(Data) ? GameState.GameOver : GameState.Island;
         Notify();
     }
 
@@ -223,6 +261,8 @@ public class GameManager : MonoBehaviour
             Battle = null;
             Preview = null;
             PreviewDest = "";
+            sailTick = 1.1f;
+            stepping = false;
             State = GameState.Map;
             Notify();
             return "Save carregado (dia " + Data.world.day + ").";

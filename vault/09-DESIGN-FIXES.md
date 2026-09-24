@@ -29,3 +29,7 @@ Reduzir o risco #1 (permadeath sem apego/causa legível) e #4 (risco como loteri
 - Viagem: ordens Cautela/Normal/Marcha com trade-offs acima.
 - RNG: navegador + ordens reduzem, nunca eliminam (piso 2% risco / 5% evento).
 - Perigos: +Redemoinho (3 escolhas); mares de tempestade (danger≥4 dobra chance de Storm).
+
+## Game-feel (auditoria 10, implementado)
+
+- Fast-forward pós-evento (APRESSAR: tick 1.1s→0.25s); inimigos em passos de 0.35s + Shake + Hit; SFX procedurais + mute; tradeoff da medicina na ficha.

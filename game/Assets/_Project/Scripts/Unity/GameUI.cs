@@ -30,6 +30,7 @@ public class GameUI : MonoBehaviour
     string selChar = "";
     int selTarget;
     string journalTab = "Todos";
+    int prevMoney = -1;
 
     void Awake()
     {
@@ -40,6 +41,7 @@ public class GameUI : MonoBehaviour
         Juice.Ensure();
         Build();
         gm.OnChanged += Refresh;
+        gm.OnEnemyHit += delegate { Juice.Shake(content); Sfx.Hit(); };
         Refresh();
     }
 
@@ -112,6 +114,9 @@ public class GameUI : MonoBehaviour
     {
         if (gm == null || gm.Data == null) return;
         GameData d = gm.Data;
+        int money = d.GetResource(ResourceId.Money);
+        if (prevMoney >= 0 && money > prevMoney) Sfx.Coin();
+        prevMoney = money;
         topBar.text = string.Format("Dia {0}  |  {1}$  |  Comida {2}  Agua {3}  Mad {4}  Metal {5}  Med {6}  |  {7} {8}/{9}  |  Trip {10}/{11}",
             d.world.day, d.GetResource(ResourceId.Money), d.GetResource(ResourceId.Food), d.GetResource(ResourceId.Water),
             d.GetResource(ResourceId.Wood), d.GetResource(ResourceId.Metal), d.GetResource(ResourceId.Medicine),
@@ -165,12 +170,8 @@ public class GameUI : MonoBehaviour
         for (int i = 0; i < d.world.islands.Count; i++)
         {
             IslandData isl = d.world.islands[i];
-            float ax = (isl.x + 55f) / 110f;
-            float ay = (isl.y + 55f) / 110f;
-            if (ax < 0.02f) ax = 0.02f;
-            if (ax > 0.98f) ax = 0.98f;
-            if (ay < 0.05f) ay = 0.05f;
-            if (ay > 0.95f) ay = 0.95f;
+            float ax, ay;
+            Iso.Pin(isl.x, isl.y, out ax, out ay);
             string id = isl.id;
             bool here = isl.id == d.currentIslandId;
             Texture2D itex = IslandRenderer.Render(d.world.seed, isl.id, isl.archetype);
@@ -284,6 +285,14 @@ public class GameUI : MonoBehaviour
         frt.offsetMin = new Vector2(4, 4);
         frt.offsetMax = new Vector2(-4, -4);
         MkLabel("A tripulacao segue as ordens do navegador...", 16, Color.white);
+        if (gm.sailTick > 0.3f)
+        {
+            MkButton("APRESSAR >>>", 52, delegate { gm.FastForward(); Refresh(); });
+        }
+        else
+        {
+            MkLabel("(a todo pano!)", 15, Gold);
+        }
     }
 
     void ShowEvent(GameData d)
@@ -436,6 +445,7 @@ public class GameUI : MonoBehaviour
         if (c.grave)
         {
             MkCardText(card, "FERIDO GRAVE — ATK pela metade, próximo golpe letal mata. Trate com 1 medicina.", 16);
+            MkCardText(card, "Usar 1 medicina aqui ou guardar para a viagem? Eventos e combate também consomem.", 15);
             string cid = c.id;
             MkButton("Tratar (1 medicina, tem " + d.GetResource(ResourceId.Medicine) + ")", 56, delegate
             {
@@ -540,6 +550,7 @@ public class GameUI : MonoBehaviour
         MkBigButton("SALVAR", delegate { msg = gm.Save(); Refresh(); });
         MkBigButton("CARREGAR", delegate { msg = gm.Load(); Refresh(); });
         MkBigButton("NOVA JORNADA", delegate { gm.NewGame(gm.Seed + 1); screen = "map"; msg = "Nova jornada!"; Refresh(); }, true);
+        MkBigButton("SOM: " + (Sfx.muted ? "OFF" : "ON"), delegate { Sfx.muted = !Sfx.muted; Refresh(); });
         MkButton("Voltar ao mapa", 52, delegate { screen = "map"; Refresh(); });
     }
 
@@ -659,7 +670,7 @@ public class GameUI : MonoBehaviour
         img.color = bg;
         UIStyle.SkinButton(go, bg);
         Button b = go.AddComponent<Button>();
-        b.onClick.AddListener(delegate { Juice.Punch(go); });
+        b.onClick.AddListener(delegate { Juice.Punch(go); Sfx.Click(); });
         LayoutElement le = go.AddComponent<LayoutElement>();
         le.minHeight = minH;
         le.preferredHeight = minH;
@@ -797,7 +808,7 @@ public class GameUI : MonoBehaviour
         im.transform.SetParent(go.transform, false);
         Image img = im.AddComponent<Image>();
         img.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
-        im.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
+        im.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; Sfx.Click(); onClick(); });
         RectTransform irt = im.GetComponent<RectTransform>();
         irt.anchorMin = new Vector2(0, 1);
         irt.anchorMax = new Vector2(1, 1);
@@ -811,7 +822,7 @@ public class GameUI : MonoBehaviour
         tx.color = here ? Gold : Color.white;
         tx.alignment = TextAnchor.UpperCenter;
         tx.text = (here ? ">> " : "") + name + "\nPerigo " + danger;
-        lab.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
+        lab.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; Sfx.Click(); onClick(); });
         RectTransform lrt = lab.GetComponent<RectTransform>();
         lrt.anchorMin = new Vector2(0, 0);
         lrt.anchorMax = new Vector2(1, 0);
