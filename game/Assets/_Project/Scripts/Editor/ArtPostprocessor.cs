@@ -11,10 +11,18 @@ public class ArtPost : AssetPostprocessor
         TextureImporter t = (TextureImporter)assetImporter;
         t.textureType = TextureImporterType.Sprite;
         t.spriteImportMode = SpriteImportMode.Single;
-        t.filterMode = FilterMode.Bilinear;
         t.textureCompression = TextureImporterCompression.Uncompressed;
         t.maxTextureSize = 512;
         string f = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+        if (assetPath.Contains("/kenney/"))
+        {
+            t.filterMode = FilterMode.Point;
+            t.isReadable = true;
+            if (f.StartsWith("btn_")) t.spriteBorder = new Vector4(10, 10, 10, 10);
+            else if (f.StartsWith("panel_")) t.spriteBorder = new Vector4(12, 12, 12, 12);
+            return;
+        }
+        t.filterMode = FilterMode.Point;
         if (f.StartsWith("btn_")) t.spriteBorder = new Vector4(20, 12, 20, 12);
         else if (f.StartsWith("panel_")) t.spriteBorder = new Vector4(26, 26, 26, 26);
     }

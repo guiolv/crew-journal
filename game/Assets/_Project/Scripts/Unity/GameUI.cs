@@ -20,6 +20,7 @@ public class GameUI : MonoBehaviour
 
     GameManager gm;
     Font font;
+    Font fontPixel;
     Text topDay, topMoney, topFood, topWater, topWood, topMed, topTrip;
     Text logText;
     RectTransform content;
@@ -36,7 +37,10 @@ public class GameUI : MonoBehaviour
     {
         gm = GameManager.Instance;
         if (gm == null) gm = FindAnyObjectByType<GameManager>();
-        font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        font = Resources.Load<Font>("Fonts/KenneyMini");
+        if (font == null) font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        fontPixel = Resources.Load<Font>("Fonts/KenneyPixel");
+        if (fontPixel == null) fontPixel = font;
         PlaceholderArt.Init();
         Juice.Ensure();
         Build();
@@ -61,7 +65,7 @@ public class GameUI : MonoBehaviour
         top.transform.SetParent(canvas.transform, false);
         Rect(top, 0, 1, 1, 1, 6, -44, -6, -4);
         HorizontalLayoutGroup thg = top.AddComponent<HorizontalLayoutGroup>();
-        thg.spacing = 12;
+        thg.spacing = 6;
         thg.padding = new RectOffset(8, 8, 4, 4);
         thg.childControlWidth = false;
         thg.childForceExpandWidth = false;
@@ -69,7 +73,7 @@ public class GameUI : MonoBehaviour
         topMoney = TopChip(top.transform, "icon_coin");
         topFood = TopChip(top.transform, "icon_food");
         topWater = TopChip(top.transform, "icon_water");
-        topWood = TopChip(top.transform, null);
+        topWood = TopChip(top.transform, "icon_wood");
         topMed = TopChip(top.transform, "icon_medicine");
         topTrip = TopChip(top.transform, "icon_ship");
 
@@ -164,6 +168,7 @@ public class GameUI : MonoBehaviour
     {
         GameObject card = MkCard();
         MkCardText(card, "MAPA DO MUNDO — toque numa ilha para ver a viagem", 20);
+        ClickHint(card.transform);
         GameObject sea = new GameObject("Sea");
         sea.transform.SetParent(content, false);
         Image simg = sea.AddComponent<Image>();
@@ -249,7 +254,7 @@ public class GameUI : MonoBehaviour
         MkCardText(card, string.Format("Tempo: {0} dias   Risco: {1}%   Eventos: ate ~{2}%", gm.Preview.days, (int)(gm.Preview.risk * 100), (int)(gm.Preview.eventChance * 100)), 17);
         MkCardText(card, string.Format("Consumo: {0} comida / {1} agua   (voce tem {2} / {3})", needFood, needWater, d.GetResource(ResourceId.Food), d.GetResource(ResourceId.Water)), 17);
         MkCardText(card, "Em jogo: restam " + (d.GetResource(ResourceId.Food) - needFood) + " comida / " + (d.GetResource(ResourceId.Water) - needWater) + " agua. Frágeis: " + FragileCrew(d), 16);
-        PortraitImage(content, 210, 140, IslandRenderer.Render(d.world.seed, to.id, to.archetype));
+        PortraitImage(content, 150, 150, IslandRenderer.Render(d.world.seed, to.id, to.archetype));
         string id = to.id;
         MkBigButton("INICIAR VIAGEM — " + gm.Preview.days + " dias", delegate { screen = "island"; gm.BeginVoyage(id); });
         MkButton("Voltar ao mapa", 52, delegate { screen = "map"; Refresh(); });
@@ -317,6 +322,7 @@ public class GameUI : MonoBehaviour
         MkCardText(card, TravelEvents.TitleOf(k), 24);
         MkCardText(card, TravelEvents.DescOf(k), 17);
         MkCardText(card, "O que fazer?", 18);
+        ClickHint(card.transform);
         EventChoice[] opts = TravelEvents.OptionsOf(k);
         for (int i = 0; i < opts.Length; i++)
         {
@@ -332,7 +338,7 @@ public class GameUI : MonoBehaviour
         GameObject card = MkCard();
         MkCardText(card, isl.displayName + "  [" + isl.archetype + "]", 22);
         MkCardText(card, "Perigo " + isl.danger + "   Reputacao: " + RepName(d.GetRep(isl.id)) + " (" + d.GetRep(isl.id) + ")", 17);
-        PortraitImage(content, 210, 140, IslandRenderer.Render(d.world.seed, isl.id, isl.archetype));
+        PortraitImage(content, 150, 150, IslandRenderer.Render(d.world.seed, isl.id, isl.archetype));
         MkHeader("Comercio");
         ResourceId[] ids = new ResourceId[] { ResourceId.Food, ResourceId.Water, ResourceId.Wood, ResourceId.Metal, ResourceId.Medicine };
         for (int i = 0; i < ids.Length; i++)
@@ -363,7 +369,7 @@ public class GameUI : MonoBehaviour
             Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod, c.grave);
             PortraitButton(string.Format("{0}  [{1} nv{2}]  nav:{3} lut:{4}  —  {5}$", c.displayName, job, c.level, c.nav, c.fighter, c.hireCost), tex, delegate
             {
-                string m; GameSession.Recruit(d, id, out m); msg = m; Refresh();
+                string m; if (GameSession.Recruit(d, id, out m)) Sfx.Recruit(); msg = m; Refresh();
             });
         }
         if (shown == 0) MkLabel("(sem recrutas aqui)", 16, Gold);
@@ -464,7 +470,7 @@ public class GameUI : MonoBehaviour
             string cid = c.id;
             MkButton("Tratar (1 medicina, tem " + d.GetResource(ResourceId.Medicine) + ")", 56, delegate
             {
-                string m; GameSession.TreatWound(d, cid, out m); msg = m; Refresh();
+                string m; if (GameSession.TreatWound(d, cid, out m)) Sfx.Heal(); msg = m; Refresh();
             });
         }
         MkHeader("Relacoes");
@@ -623,7 +629,7 @@ public class GameUI : MonoBehaviour
         GameObject go = new GameObject("Text");
         go.transform.SetParent(parent, false);
         Text tx = go.AddComponent<Text>();
-        tx.font = font;
+        tx.font = size >= 19 ? fontPixel : font;
         tx.fontSize = size;
         tx.color = Color.white;
         return tx;
@@ -827,8 +833,8 @@ public class GameUI : MonoBehaviour
         RectTransform irt = im.GetComponent<RectTransform>();
         irt.anchorMin = new Vector2(0, 1);
         irt.anchorMax = new Vector2(1, 1);
-        irt.offsetMin = new Vector2(4, -116);
-        irt.offsetMax = new Vector2(-4, -8);
+        irt.offsetMin = new Vector2(27, -120);
+        irt.offsetMax = new Vector2(-27, -4);
         GameObject lab = new GameObject("Name");
         lab.transform.SetParent(go.transform, false);
         Text tx = lab.AddComponent<Text>();
@@ -842,7 +848,7 @@ public class GameUI : MonoBehaviour
         lrt.anchorMin = new Vector2(0, 0);
         lrt.anchorMax = new Vector2(1, 0);
         lrt.offsetMin = new Vector2(-15, 0);
-        lrt.offsetMax = new Vector2(15, 32);
+        lrt.offsetMax = new Vector2(15, 40);
     }
 
     void PortraitImage(Transform parent, float w, float h, Texture tex)
@@ -929,11 +935,43 @@ public class GameUI : MonoBehaviour
                 le.preferredHeight = 26;
             }
         }
-        Text tx = MkText(go.transform, 18);
+        Text tx = MkText(go.transform, 16);
         tx.color = Gold;
         ContentSizeFitter tf = tx.gameObject.AddComponent<ContentSizeFitter>();
         tf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         return tx;
+    }
+
+    void ClickHint(Transform parent)
+    {
+        Sprite s = UIStyle.Get("click_1");
+        if (s == null) s = UIStyle.Get("click_0");
+        GameObject row = new GameObject("Hint");
+        row.transform.SetParent(parent, false);
+        HorizontalLayoutGroup hg = row.AddComponent<HorizontalLayoutGroup>();
+        hg.spacing = 6;
+        hg.childControlWidth = false;
+        hg.childForceExpandWidth = false;
+        ContentSizeFitter cf = row.AddComponent<ContentSizeFitter>();
+        cf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        if (s != null)
+        {
+            GameObject io = new GameObject("Ic");
+            io.transform.SetParent(row.transform, false);
+            Image img = io.AddComponent<Image>();
+            img.sprite = s;
+            img.raycastTarget = false;
+            LayoutElement le = io.AddComponent<LayoutElement>();
+            le.minWidth = 28;
+            le.minHeight = 28;
+            le.preferredWidth = 28;
+            le.preferredHeight = 28;
+        }
+        Text tx = MkText(row.transform, 14);
+        tx.text = "clique para escolher";
+        tx.color = Ink;
+        ContentSizeFitter tf = tx.gameObject.AddComponent<ContentSizeFitter>();
+        tf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
     }
 
     void Rect(GameObject go, float ax0, float ay0, float ax1, float ay1, float ox0, float oy0, float ox1, float oy1)
