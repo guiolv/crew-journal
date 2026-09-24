@@ -72,6 +72,11 @@
 - Fundo do sprite passou a transparente (só ilha + auréola rasa); moldura removida do mapa. Atual = nome dourado + `>>`.
 - Verificação: preview PNG confere transparência, build + smoke limpos.
 
+## 2026-09-24 — ses_f441bb278ffeK6WjqT2ncewDl3 — Isométrico verificado (outra sessão fez, eu integrei)
+- Mudança top-down→isométrico veio da outra sessão (`Iso.cs` + `IslandRenderer` diamante com penhascos + pins `Iso.Pin`); encontrei e reconciliei 1 conflito: o rewrite dela tinha voltado o fundo azul chapado — reapliquei transparente (só ilha + auréola).
+- Verificação: CHECK 0 (Runtime+Editor), preview do diamante conferido a olho, build 23:45, smoke limpo.
+- Não commitei: arquivos da outra sessão continuam uncommited com ela (só mexi no Fill do IslandRenderer dela).
+
 ## 2026-09-23 — ses_f441bb278ffeK6WjqT2ncewDl3 — Lens review da skill `skills/`
 - Rodada skill game-design (Schell) em modo REVIEW sobre crew-journal → `vault/08-LENS-REVIEW.md`.
 - Resultado: 6 perspectivas (A/C/D/F/G/H); 6 tensões, maior risco = permadeath sem apego/causa legível; 3 alternativas (A capitão ativo, B morte em 2 etapas, C vínculos primeiro); protocolo de playtest de 30 min com 6 perguntas (serve o playtest pendente de 04-TAREFAS); questões abertas (balanceamento GED sem sessão real).
