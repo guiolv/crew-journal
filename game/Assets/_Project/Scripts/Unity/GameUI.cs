@@ -127,12 +127,12 @@ public class GameUI : MonoBehaviour
         topTrip = TopChip(top.transform, "icon_ship");
 
         logText = MkText(canvas.transform, 15);
-        Rect(logText.gameObject, 0, 0, 1, 0, 10, 66, -10, 168);
+        Rect(logText.gameObject, 0, 0, 1, 0, 10, 8, -10, 100);
 
         // viewport com scroll
         GameObject vp = new GameObject("Viewport");
         vp.transform.SetParent(canvas.transform, false);
-        Rect(vp, 0, 0, 1, 1, 8, 176, -8, -50);
+        Rect(vp, 0, 0, 1, 1, 8, 176, -8, 108);
         Image vbg = vp.AddComponent<Image>();
         vbg.color = Navy;
         vp.AddComponent<RectMask2D>();
@@ -173,6 +173,27 @@ public class GameUI : MonoBehaviour
         MkBarButton(bar.transform, "Equipe", delegate { screen = "crew"; Refresh(); });
         MkBarButton(bar.transform, "Diario", delegate { screen = "journal"; Refresh(); });
         MkBarButton(bar.transform, "Menu", delegate { screen = "menu"; Refresh(); });
+        bar.SetActive(false); // chrome oculto p/ visual clean (reversivel)
+
+        GameObject mm = new GameObject("MenuBtn");
+        mm.transform.SetParent(canvas.transform, false);
+        Image mi = mm.AddComponent<Image>();
+        mi.color = TealDark;
+        UIStyle.SkinButton(mm, TealDark);
+        mm.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; Sfx.Click(); screen = "menu"; Refresh(); });
+        RectTransform mrt = mm.GetComponent<RectTransform>();
+        mrt.anchorMin = new Vector2(1, 1);
+        mrt.anchorMax = new Vector2(1, 1);
+        mrt.offsetMin = new Vector2(-52, -96);
+        mrt.offsetMax = new Vector2(-8, -52);
+        Text mt = MkText(mm.transform, 24);
+        mt.text = "...";
+        mt.alignment = TextAnchor.MiddleCenter;
+        RectTransform mtrt = mt.GetComponent<RectTransform>();
+        mtrt.anchorMin = new Vector2(0, 0);
+        mtrt.anchorMax = new Vector2(1, 1);
+        mtrt.offsetMin = new Vector2(0, 0);
+        mtrt.offsetMax = new Vector2(0, 0);
     }
 
     void Refresh()

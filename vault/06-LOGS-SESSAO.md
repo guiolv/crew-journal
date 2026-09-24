@@ -127,3 +127,6 @@
 
 ## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Tile catalog procedural (TASK, sem tocar gerador)
 - game/Assets/Procedural/TileCatalog/: asset_manifest.json (272) + tile_catalog.json (272) + review md + 2 contact sheets + catalog.py. 16x16 verificado nos 272. Gerador intacto.
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Layout clean: sem barra de botoes
+- Barra inferior oculta (SetActive false, reversivel); viewport estendido; log movido p/ base; botao '...' 44px abre Menu. Screenshot proprio confirma.
