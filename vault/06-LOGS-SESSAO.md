@@ -124,3 +124,6 @@
 ## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Mar limpo + screenshot proprio
 - Mar com faixas: tile P0006 tem listras internas. Troca por mar chapado + 22 marcas d'agua esparsas (speckle_0/1). F12 com BMP manual (ScreenCapture/EncodeToPNG ausentes neste install).
 - Screenshot via foco+PrintScreen confirma: aneis de areia, espuma/contorno, icones, fonte pixel, botoes. Nao commitei arquivos da outra sessao (icons M + deletes).
+
+## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Tile catalog procedural (TASK, sem tocar gerador)
+- game/Assets/Procedural/TileCatalog/: asset_manifest.json (272) + tile_catalog.json (272) + review md + 2 contact sheets + catalog.py. 16x16 verificado nos 272. Gerador intacto.
