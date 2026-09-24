@@ -123,12 +123,17 @@ namespace CrewJournal.Logic
             CharacterData w = null;
             for (int i = 0; i < party.Count; i++)
             {
-                if (party[i].alive && party[i].stats.hp > 0)
+                if (party[i].alive && party[i].stats.hp > 0 && !party[i].grave)
                 {
                     if (w == null || party[i].stats.hp < w.stats.hp) w = party[i];
                 }
             }
-            return w;
+            if (w != null) return w;
+            for (int i = 0; i < party.Count; i++)
+            {
+                if (party[i].alive && party[i].stats.hp > 0) return party[i];
+            }
+            return null;
         }
 
         private EnemyData FirstEnemy()
@@ -158,9 +163,18 @@ namespace CrewJournal.Logic
             Log(e.name + " causou " + dmg + " em " + t.displayName + ".");
             if (t.stats.hp <= 0)
             {
-                t.stats.hp = 0;
-                t.alive = false;
-                Log(t.displayName + " caiu!");
+                if (!t.grave)
+                {
+                    t.grave = true;
+                    t.stats.hp = 1;
+                    Log(t.displayName + " está em estado GRAVE! Precisa de tratamento.");
+                }
+                else
+                {
+                    t.stats.hp = 0;
+                    t.alive = false;
+                    Log(t.displayName + " caiu!");
+                }
             }
             CheckOver();
         }
@@ -214,16 +228,17 @@ namespace CrewJournal.Logic
                     t = FirstEnemy();
                 }
                 if (t == null) { CheckOver(); return "Sem inimigos."; }
+                int effAtk = c.grave ? Math.Max(1, c.stats.atk / 2) : c.stats.atk;
                 int dmg;
                 if (a == BattleAction.Heavy)
                 {
-                    dmg = (c.stats.atk * 3) / 2 + c.fighter / 10 + rng.Next(3) - t.def + equipBonus;
+                    dmg = (effAtk * 3) / 2 + c.fighter / 10 + rng.Next(3) - t.def + equipBonus;
                     c.stats.hp = Math.Max(1, c.stats.hp - 2);
                     Log(c.displayName + " golpe pesado em " + t.name + "!");
                 }
                 else
                 {
-                    dmg = c.stats.atk + c.fighter / 15 + rng.Next(4) - t.def + equipBonus;
+                    dmg = effAtk + c.fighter / 15 + rng.Next(4) - t.def + equipBonus;
                 }
                 if (dmg < 1) dmg = 1;
                 t.hp -= dmg;

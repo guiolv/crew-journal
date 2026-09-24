@@ -61,6 +61,7 @@ namespace CrewJournal.Logic
         Storm,
         UnknownShip,
         SeaCreature,
+        Whirlpool,
         CalmBonus
     }
 

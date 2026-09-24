@@ -59,6 +59,7 @@ namespace CrewJournal.Logic
         [DataMember] public int xp;
         [DataMember] public bool scar;
         [DataMember] public int outfitMod;
+        [DataMember] public bool grave;
         [DataMember] public int battles;
         [DataMember] public int kills;
         [DataMember] public int hireCost;
@@ -197,6 +198,7 @@ namespace CrewJournal.Logic
         [DataMember] public int sailDay;
         [DataMember] public int sailTotal;
         [DataMember] public TravelEventKind pendingEvent;
+        [DataMember] public int sailStance;
 
         public GameData()
         {

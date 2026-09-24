@@ -20,13 +20,27 @@ public static class PortraitRenderer
 
     static Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
 
-    public static Texture2D Render(int worldSeed, string charId, string job, List<string> traits, bool scar, int outfitMod)
+    public static Texture2D Render(int worldSeed, string charId, string job, List<string> traits, bool scar, int outfitMod, bool grave)
     {
-        string key = worldSeed + "|" + charId + "|" + scar + "|" + outfitMod;
+        string key = worldSeed + "|" + charId + "|" + scar + "|" + outfitMod + "|" + grave;
         Texture2D t;
         if (cache.TryGetValue(key, out t)) return t;
         CharacterVisual v = VisualDNA.Character(worldSeed, charId, job, traits, scar, outfitMod);
-        t = Draw(v, false);
+        Texture2D lib;
+        Color[] libPx = null;
+        if (PartSources.Current != null
+            && PartSources.Current.TryGet("Portraits", SpriteLib.PortraitKey(job, worldSeed, charId), out lib))
+            libPx = Pixel.ClonePixels(lib, 40, 48);
+        if (libPx != null)
+        {
+            // Base externa (IA) + cicatriz procedural por cima (historia).
+            t = Pixel.ToTexture(libPx, 40, 48);
+            ApplyScar(t, v);
+        }
+        else
+        {
+            t = Draw(v, false, grave);
+        }
         cache[key] = t;
         return t;
     }
@@ -36,7 +50,21 @@ public static class PortraitRenderer
         string key = "e|" + seed + "|" + typeIdx + "|" + n;
         Texture2D t;
         if (cache.TryGetValue(key, out t)) return t;
-        t = Draw(VisualDNA.Enemy(seed, typeIdx, n), true);
+        CharacterVisual v = VisualDNA.Enemy(seed, typeIdx, n);
+        Texture2D lib;
+        Color[] libPx = null;
+        if (PartSources.Current != null
+            && PartSources.Current.TryGet("Portraits", SpriteLib.EnemyKey(typeIdx, n), out lib))
+            libPx = Pixel.ClonePixels(lib, 40, 48);
+        if (libPx != null)
+        {
+            t = Pixel.ToTexture(libPx, 40, 48);
+            ApplyScar(t, v);
+        }
+        else
+        {
+            t = Draw(v, true, false);
+        }
         cache[key] = t;
         return t;
     }
@@ -53,7 +81,7 @@ public static class PortraitRenderer
         return new Color(0.35f, 0.45f, 0.58f);
     }
 
-    static Texture2D Draw(CharacterVisual v, bool hostile)
+    static Texture2D Draw(CharacterVisual v, bool hostile, bool grave)
     {
         int W = 40, H = 48;
         Color[] b = new Color[W * H];
@@ -105,8 +133,20 @@ public static class PortraitRenderer
         else if (v.accessory == 5) { Pixel.Rect(b, W, H, 18, 21, 4, 1, gold); }
         else if (v.accessory == 6) { Pixel.Rect(b, W, H, 25, 12, 3, 1, new Color(0.4f, 0.25f, 0.12f)); }
         else if (v.accessory == 7) { Pixel.Rect(b, W, H, 12, 1, 3, 14, Pixel.Shade(shirt, 0.55f)); Pixel.Rect(b, W, H, 25, 1, 3, 14, Pixel.Shade(shirt, 0.55f)); Pixel.Rect(b, W, H, 12, 1, 16, 2, Pixel.Shade(shirt, 0.55f)); }
-        // cicatriz
+        // cicatriz (tambem aplicada sobre base externa via ApplyScar)
         if (v.scar) { Pixel.Px(b, W, H, 22, 9, red); Pixel.Px(b, W, H, 23, 10, red); Pixel.Px(b, W, H, 24, 11, red); }
         return Pixel.ToTexture(b, W, H);
+    }
+
+    // Cicatriz sobre textura pronta. SetPixel usa y de baixo p/ cima:
+    // y = H-1-yTop, H = 48.
+    static void ApplyScar(Texture2D t, CharacterVisual v)
+    {
+        if (!v.scar) return;
+        Color red = new Color(0.75f, 0.15f, 0.12f);
+        t.SetPixel(22, 38, red);
+        t.SetPixel(23, 37, red);
+        t.SetPixel(24, 36, red);
+        t.Apply();
     }
 }

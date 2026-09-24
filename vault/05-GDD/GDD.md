@@ -298,6 +298,20 @@ Exemplos:
 * lutar;
 * evitar.
 
+### Redemoinho
+
+* contornar (navegador ≥60 passa ileso, +XP);
+* atravessar a borda (rápido, dano ao casco, perde comida);
+* esperar dissipar (+1 dia, consome suprimentos).
+
+### Mares de tempestade
+
+Destinos perigosos (perigo ≥4) têm o dobro de chance de clima Tempestade na viagem.
+
+### Regra do RNG (navegação)
+
+Navegador experiente + ordens do capitão (Cautela/Normal/Marcha) REDUZEM risco e chance de evento, nunca eliminam: piso de 2% de risco e 5% de evento por viagem.
+
 ---
 
 # 11. Ilhas
@@ -461,6 +475,8 @@ No MVP, relações terão impacto principalmente em:
 ---
 
 # 18. Morte permanente
+
+O primeiro golpe letal em combate deixa o tripulante em **estado grave** (HP 1, ATK pela metade, bandagem no retrato) em vez de matar. Um novo golpe letal enquanto grave **mata**. Feridos graves são ignorados pelos inimigos salvo se forem os únicos de pé. Tratamento: 1 medicina na ficha do personagem (cura até 50% do HP).
 
 Quando um personagem morre:
 

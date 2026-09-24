@@ -17,7 +17,8 @@ namespace CrewJournal.Logic
             return kind == TravelEventKind.Storm
                 || kind == TravelEventKind.AbandonedShip
                 || kind == TravelEventKind.UnknownShip
-                || kind == TravelEventKind.SeaCreature;
+                || kind == TravelEventKind.SeaCreature
+                || kind == TravelEventKind.Whirlpool;
         }
 
         public static string TitleOf(TravelEventKind kind)
@@ -28,6 +29,7 @@ namespace CrewJournal.Logic
                 case TravelEventKind.AbandonedShip: return "Navio abandonado";
                 case TravelEventKind.UnknownShip: return "Navio desconhecido";
                 case TravelEventKind.SeaCreature: return "Criatura marinha!";
+                case TravelEventKind.Whirlpool: return "Redemoinho à vista!";
                 default: return "Mar calmo";
             }
         }
@@ -40,6 +42,7 @@ namespace CrewJournal.Logic
                 case TravelEventKind.AbandonedShip: return "Um casco a deriva, silencioso. Pode haver suprimentos — ou problemas.";
                 case TravelEventKind.UnknownShip: return "Vela desconhecida a bombordo. Nao responde aos sinais.";
                 case TravelEventKind.SeaCreature: return "Algo enorme move-se sob as ondas, circulando o navio.";
+                case TravelEventKind.Whirlpool: return "As águas giram com força adiante, puxando tudo para o centro. Passar perto é arriscado.";
                 default: return "Nenhum evento.";
             }
         }
@@ -63,6 +66,11 @@ namespace CrewJournal.Logic
                         Opt("Aproximar", "troca ou armadilha"),
                         Opt("Atacar", "combate imediato"),
                         Opt("Fugir", "evitar contato") };
+                case TravelEventKind.Whirlpool:
+                    return new EventChoice[] {
+                        Opt("Contornar", "navegador bom passa ileso, +XP"),
+                        Opt("Atravessar a borda", "rapido, dano ao casco, perde carga"),
+                        Opt("Esperar dissipar", "+1 dia, consome suprimentos") };
                 default:
                     return new EventChoice[] {
                         Opt("Lutar", "combate imediato"),
@@ -92,6 +100,7 @@ namespace CrewJournal.Logic
                 case TravelEventKind.AbandonedShip: return Loot(d, idx, rng);
                 case TravelEventKind.UnknownShip: return Ship(d, idx, rng, out needCombat, out combatDanger);
                 case TravelEventKind.SeaCreature: return Creature(d, idx, rng, out needCombat, out combatDanger);
+                case TravelEventKind.Whirlpool: return Whirlpool(d, idx, rng);
                 default: return "Seguimos viagem.";
             }
         }
@@ -212,6 +221,35 @@ namespace CrewJournal.Logic
             needCombat = true;
             GameSession.AddJournal(d, "Falha ao evitar a criatura! Combate!");
             return "Navegador inexperiente: fomos vistos! Combate!";
+        }
+
+        private static string Whirlpool(GameData d, int idx, Random rng)
+        {
+            if (idx == 0)
+            {
+                if (GameSession.BestNavigator(d) >= 60)
+                {
+                    Progression.AddXpBestNav(d, 15);
+                    GameSession.AddJournal(d, "Navegador contornou o redemoinho com precisão.");
+                    return "Contornado sem danos. Navegador ganhou XP.";
+                }
+                d.ship.hull = Math.Max(0, d.ship.hull - 4);
+                GameSession.AddJournal(d, "A borda do redemoinho atingiu o casco (-4).");
+                return "Manobra parcial: casco -4. Contrate um navegador melhor.";
+            }
+            if (idx == 1)
+            {
+                int dmg = 5 + rng.Next(5);
+                d.ship.hull = Math.Max(0, d.ship.hull - dmg);
+                d.AddResource(ResourceId.Food, -2);
+                GameSession.AddJournal(d, "Atravessamos a borda do redemoinho! Casco -" + dmg + ", -2 comida ao mar.");
+                return "Atravessamos! Casco -" + dmg + ", -2 comida perdida.";
+            }
+            d.sailTotal += 1;
+            d.AddResource(ResourceId.Food, -1);
+            d.AddResource(ResourceId.Water, -1);
+            GameSession.AddJournal(d, "Esperamos o redemoinho dissipar (+1 dia, -1 comida, -1 agua).");
+            return "Esperamos com segurança: +1 dia, -1 comida, -1 agua.";
         }
     }
 }

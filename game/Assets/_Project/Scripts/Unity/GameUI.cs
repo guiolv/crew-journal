@@ -23,6 +23,8 @@ public class GameUI : MonoBehaviour
     Text topBar;
     Text logText;
     RectTransform content;
+    CanvasGroup contentFade;
+    int animToken;
     string screen = "map";
     string msg = "";
     string selChar = "";
@@ -35,6 +37,7 @@ public class GameUI : MonoBehaviour
         if (gm == null) gm = FindAnyObjectByType<GameManager>();
         font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         PlaceholderArt.Init();
+        Juice.Ensure();
         Build();
         gm.OnChanged += Refresh;
         Refresh();
@@ -83,6 +86,7 @@ public class GameUI : MonoBehaviour
         vg.childForceExpandHeight = false;
         ContentSizeFitter cf = co.AddComponent<ContentSizeFitter>();
         cf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        contentFade = co.AddComponent<CanvasGroup>();
 
         ScrollRect scroll = canvas.AddComponent<ScrollRect>();
         scroll.content = content;
@@ -119,6 +123,8 @@ public class GameUI : MonoBehaviour
         if (msg != "") log += "> " + msg + "\n";
         logText.text = log;
         Clear(content);
+        animToken++;
+        Juice.Fade(contentFade);
         if (gm.State == GameState.Sailing) { ShowSailing(d); return; }
         if (gm.State == GameState.Event) { ShowEvent(d); return; }
         if (gm.State == GameState.Combat) { ShowCombat(d); return; }
@@ -142,10 +148,20 @@ public class GameUI : MonoBehaviour
         sea.transform.SetParent(content, false);
         Image simg = sea.AddComponent<Image>();
         simg.color = Sea;
+        Sprite sea0 = UIStyle.Get("sea_0");
+        if (sea0 != null)
+        {
+            simg.sprite = sea0;
+            simg.color = Color.white;
+            simg.type = Image.Type.Tiled;
+            int t = animToken;
+            Juice.Frames(simg, new string[] { "sea_0", "sea_1", "sea_2", "sea_3" }, 0.4f, delegate { return animToken == t; });
+        }
         LayoutElement sle = sea.AddComponent<LayoutElement>();
         sle.minHeight = 430;
         sle.preferredHeight = 430;
         RectTransform seaRt = sea.GetComponent<RectTransform>();
+        UIStyle.Compass(seaRt);
         for (int i = 0; i < d.world.islands.Count; i++)
         {
             IslandData isl = d.world.islands[i];
@@ -158,7 +174,7 @@ public class GameUI : MonoBehaviour
             string id = isl.id;
             bool here = isl.id == d.currentIslandId;
             string label = (here ? ">> " : "") + isl.displayName + "\n[" + isl.archetype + "] P" + isl.danger;
-            MapPin(seaRt, ax, ay, 200, 66, label, here ? Gold : TealDark, delegate
+            MapPin(seaRt, ax, ay, 200, 66, label, here ? Gold : TealDark, isl.archetype, delegate
             {
                 if (!here)
                 {
@@ -191,8 +207,32 @@ public class GameUI : MonoBehaviour
         int needWater = gm.Preview.waterCost * crewN;
         MkCardText(card, "Navegador: " + navName, 17);
         MkCardText(card, "Clima: " + GameSession.WeatherName(gm.PreviewWeather), 17);
+        MkCardText(card, "Ordens do capitão (bônus — o mar continua imprevisível):", 16);
+        GameObject stanceRow = new GameObject("Stance");
+        stanceRow.transform.SetParent(content, false);
+        HorizontalLayoutGroup shg = stanceRow.AddComponent<HorizontalLayoutGroup>();
+        shg.spacing = 4;
+        shg.childControlWidth = true;
+        shg.childForceExpandWidth = true;
+        LayoutElement stle = stanceRow.AddComponent<LayoutElement>();
+        stle.minHeight = 48;
+        stle.preferredHeight = 48;
+        string[] snames = new string[] { "Cautela", "Normal", "Marcha" };
+        string[] sdesc = new string[] { "+1d, -risco", "equilíbrio", "-1d, +risco" };
+        for (int si = 0; si < 3; si++)
+        {
+            int sidx = si;
+            string sid = to.id;
+            MkSmallButton(stanceRow.transform, snames[si] + " (" + sdesc[si] + ")", d.sailStance == si, delegate
+            {
+                d.sailStance = sidx;
+                gm.SelectDestination(sid);
+                Refresh();
+            });
+        }
         MkCardText(card, string.Format("Tempo: {0} dias   Risco: {1}%   Eventos: ate ~{2}%", gm.Preview.days, (int)(gm.Preview.risk * 100), (int)(gm.Preview.eventChance * 100)), 17);
         MkCardText(card, string.Format("Consumo: {0} comida / {1} agua   (voce tem {2} / {3})", needFood, needWater, d.GetResource(ResourceId.Food), d.GetResource(ResourceId.Water)), 17);
+        MkCardText(card, "Em jogo: restam " + (d.GetResource(ResourceId.Food) - needFood) + " comida / " + (d.GetResource(ResourceId.Water) - needWater) + " agua. Frágeis: " + FragileCrew(d), 16);
         PortraitImage(content, 210, 140, IslandRenderer.Render(d.world.seed, to.id, to.archetype));
         string id = to.id;
         MkBigButton("INICIAR VIAGEM — " + gm.Preview.days + " dias", delegate { screen = "island"; gm.BeginVoyage(id); });
@@ -219,8 +259,25 @@ public class GameUI : MonoBehaviour
         fi.color = Gold;
         fi.type = Image.Type.Filled;
         fi.fillMethod = Image.FillMethod.Horizontal;
+        UIStyle.SkinProgress(bg, fi);
         float frac = d.sailTotal > 0 ? (float)d.sailDay / d.sailTotal : 0f;
-        fi.fillAmount = frac;
+        fi.fillAmount = 0f;
+        Juice.FillTo(fi, frac);
+        GameObject sail = new GameObject("SailShip");
+        sail.transform.SetParent(content, false);
+        Image sailImg = sail.AddComponent<Image>();
+        sailImg.color = Sea;
+        LayoutElement sle2 = sail.AddComponent<LayoutElement>();
+        sle2.minHeight = 90;
+        sle2.preferredHeight = 90;
+        Sprite sh0 = UIStyle.Get("sailship_0");
+        if (sh0 != null)
+        {
+            sailImg.sprite = sh0;
+            sailImg.color = Color.white;
+            int t = animToken;
+            Juice.Frames(sailImg, new string[] { "sailship_0", "sailship_1", "sailship_2" }, 0.3f, delegate { return animToken == t; });
+        }
         RectTransform frt = fill.GetComponent<RectTransform>();
         frt.anchorMin = new Vector2(0, 0);
         frt.anchorMax = new Vector2(1, 1);
@@ -240,7 +297,7 @@ public class GameUI : MonoBehaviour
         for (int i = 0; i < opts.Length; i++)
         {
             int idx = i;
-            MkBigButton(opts[i].label + "\n" + opts[i].desc, delegate { gm.ChooseEventOption(idx); });
+            MkBigButton(opts[i].label + "\n" + opts[i].desc, delegate { gm.ChooseEventOption(idx); }, true);
         }
     }
 
@@ -259,7 +316,7 @@ public class GameUI : MonoBehaviour
             ResourceId r = ids[i];
             int buy = EconomySystem.PriceFor(r, WorldGenerator.IslandMult(isl, r), d.GetRep(isl.id));
             int sell = EconomySystem.SellPriceFor(r, WorldGenerator.IslandMult(isl, r), d.GetRep(isl.id));
-            TradeRow(r + "  (tem " + d.GetResource(r) + ")", "Comprar " + buy + "$", "Vender " + sell + "$", delegate
+            TradeRow(r, r + "  (tem " + d.GetResource(r) + ")", "Comprar " + buy + "$", "Vender " + sell + "$", delegate
             {
                 string m; GameSession.Buy(d, isl.id, r, 1, out m); msg = m; Refresh();
             }, delegate
@@ -279,7 +336,7 @@ public class GameUI : MonoBehaviour
             shown++;
             string job = c.jobs.Count > 0 ? c.jobs[0] : "?";
             string id = c.id;
-            Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod);
+            Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod, c.grave);
             PortraitButton(string.Format("{0}  [{1} nv{2}]  nav:{3} lut:{4}  —  {5}$", c.displayName, job, c.level, c.nav, c.fighter, c.hireCost), tex, delegate
             {
                 string m; GameSession.Recruit(d, id, out m); msg = m; Refresh();
@@ -351,8 +408,8 @@ public class GameUI : MonoBehaviour
             if (!c.alive) continue;
             string job = c.jobs.Count > 0 ? c.jobs[0] : "?";
             string id = c.id;
-            Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod);
-            PortraitButton(string.Format("{0}  [{1}]  nv{2}  HP {3}/{4}", c.displayName, job, c.level, c.stats.hp, c.stats.maxHp), tex, delegate
+            Texture2D tex = PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod, c.grave);
+            PortraitButton(string.Format("{0}{1}  [{2}]  nv{3}  HP {4}/{5}", c.grave ? "[GRAVE] " : "", c.displayName, job, c.level, c.stats.hp, c.stats.maxHp), tex, delegate
             {
                 selChar = id;
                 screen = "sheet";
@@ -368,7 +425,7 @@ public class GameUI : MonoBehaviour
         string job = c.jobs.Count > 0 ? c.jobs[0] : "?";
         GameObject card = MkCard();
         MkCardText(card, c.displayName + " — " + job, 22);
-        PortraitImage(content, 140, 168, PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod));
+        PortraitImage(content, 140, 168, PortraitRenderer.Render(d.world.seed, c.id, job, c.traits, c.scar, c.outfitMod, c.grave));
         MkCardText(card, string.Format("Nivel {0}   XP {1}/{2}   HP {3}/{4}", c.level, c.xp, Progression.XpForLevel(c.level), c.stats.hp, c.stats.maxHp), 17);
         MkCardText(card, string.Format("ATK {0}  DEF {1}  VEL {2}   Moral {3}  Lealdade {4}  Salario {5}$/d",
             c.stats.atk, c.stats.def, c.stats.speed, c.morale, c.loyalty, c.wage), 17);
@@ -376,6 +433,15 @@ public class GameUI : MonoBehaviour
             c.nav, c.cook, c.medic, c.carpenter, c.fighter, c.shooter), 17);
         MkCardText(card, "Traits: " + string.Join(", ", c.traits.ToArray()) + "   Batalhas " + c.battles + "  Abates " + c.kills, 16);
         MkCardText(card, CharacterGenerator.BioFor(c), 16);
+        if (c.grave)
+        {
+            MkCardText(card, "FERIDO GRAVE — ATK pela metade, próximo golpe letal mata. Trate com 1 medicina.", 16);
+            string cid = c.id;
+            MkButton("Tratar (1 medicina, tem " + d.GetResource(ResourceId.Medicine) + ")", 56, delegate
+            {
+                string m; GameSession.TreatWound(d, cid, out m); msg = m; Refresh();
+            });
+        }
         MkHeader("Relacoes");
         int n = 0;
         for (int i = 0; i < d.relations.Count; i++)
@@ -412,7 +478,7 @@ public class GameUI : MonoBehaviour
         if (cur != null)
         {
             string cjob = cur.jobs.Count > 0 ? cur.jobs[0] : "?";
-            PortraitImage(content, 80, 96, PortraitRenderer.Render(d.world.seed, cur.id, cjob, cur.traits, cur.scar, cur.outfitMod));
+            PortraitImage(content, 80, 96, PortraitRenderer.Render(d.world.seed, cur.id, cjob, cur.traits, cur.scar, cur.outfitMod, cur.grave));
             GameObject c2 = MkCard();
             MkCardText(c2, "Vez de " + cur.displayName + "  (HP " + cur.stats.hp + "/" + cur.stats.maxHp + ")", 19);
         }
@@ -473,7 +539,7 @@ public class GameUI : MonoBehaviour
         MkCardText(card, "One ocean, a thousand stories.", 16);
         MkBigButton("SALVAR", delegate { msg = gm.Save(); Refresh(); });
         MkBigButton("CARREGAR", delegate { msg = gm.Load(); Refresh(); });
-        MkBigButton("NOVA JORNADA", delegate { gm.NewGame(gm.Seed + 1); screen = "map"; msg = "Nova jornada!"; Refresh(); });
+        MkBigButton("NOVA JORNADA", delegate { gm.NewGame(gm.Seed + 1); screen = "map"; msg = "Nova jornada!"; Refresh(); }, true);
         MkButton("Voltar ao mapa", 52, delegate { screen = "map"; Refresh(); });
     }
 
@@ -495,6 +561,21 @@ public class GameUI : MonoBehaviour
         if (rep <= -60) return "Hostil";
         if (rep <= -20) return "Desconfiado";
         return "Neutro";
+    }
+
+    string FragileCrew(GameData d)
+    {
+        CharacterData f1 = null, f2 = null;
+        for (int i = 0; i < d.crew.Count; i++)
+        {
+            CharacterData c = d.crew[i];
+            if (!c.alive) continue;
+            if (f1 == null || c.stats.hp < f1.stats.hp) { f2 = f1; f1 = c; }
+            else if (f2 == null || c.stats.hp < f2.stats.hp) { f2 = c; }
+        }
+        string s = f1 != null ? f1.displayName + " " + f1.stats.hp + "/" + f1.stats.maxHp : "—";
+        if (f2 != null) s += ", " + f2.displayName + " " + f2.stats.hp + "/" + f2.stats.maxHp;
+        return s;
     }
 
     string RelName(int aff)
@@ -550,6 +631,7 @@ public class GameUI : MonoBehaviour
         go.transform.SetParent(content, false);
         Image img = go.AddComponent<Image>();
         img.color = Parch;
+        UIStyle.SkinCard(go);
         VerticalLayoutGroup vg = go.AddComponent<VerticalLayoutGroup>();
         vg.spacing = 6;
         vg.padding = new RectOffset(14, 14, 12, 12);
@@ -575,7 +657,9 @@ public class GameUI : MonoBehaviour
         go.transform.SetParent(parent, false);
         Image img = go.AddComponent<Image>();
         img.color = bg;
-        go.AddComponent<Button>();
+        UIStyle.SkinButton(go, bg);
+        Button b = go.AddComponent<Button>();
+        b.onClick.AddListener(delegate { Juice.Punch(go); });
         LayoutElement le = go.AddComponent<LayoutElement>();
         le.minHeight = minH;
         le.preferredHeight = minH;
@@ -601,11 +685,17 @@ public class GameUI : MonoBehaviour
         MkBtnText(go, label, 19);
     }
 
-    void MkBigButton(string label, Action onClick)
+    void MkBigButton(string label, Action onClick, bool shake)
     {
         GameObject go = MkBtnBase(content, 72, Teal);
+        if (shake) go.GetComponent<Button>().onClick.AddListener(delegate { Juice.Shake(content); });
         go.GetComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
         MkBtnText(go, label, 21);
+    }
+
+    void MkBigButton(string label, Action onClick)
+    {
+        MkBigButton(label, onClick, false);
     }
 
     void MkBarButton(Transform parent, string label, Action onClick)
@@ -634,10 +724,11 @@ public class GameUI : MonoBehaviour
         rt.offsetMax = new Vector2(-2, -2);
     }
 
-    void TradeRow(string name, string buyLabel, string sellLabel, Action onBuy, Action onSell)
+    void TradeRow(ResourceId r, string name, string buyLabel, string sellLabel, Action onBuy, Action onSell)
     {
         GameObject row = new GameObject("Row");
         row.transform.SetParent(content, false);
+        UIStyle.Icon(row.transform, "icon_" + r.ToString().ToLower());
         HorizontalLayoutGroup hg = row.AddComponent<HorizontalLayoutGroup>();
         hg.spacing = 6;
         hg.childControlWidth = true;
@@ -686,18 +777,20 @@ public class GameUI : MonoBehaviour
     void RowAction(Transform parent, string label, Action onClick)
     {
         GameObject go = MkBtnBase(parent, 60, Teal);
+        go.GetComponent<Button>().onClick.AddListener(delegate { Juice.Shake(content); });
         LayoutElement le = go.GetComponent<LayoutElement>();
         le.flexibleWidth = 1;
         go.GetComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
         MkBtnText(go, label, 17);
     }
 
-    void MapPin(RectTransform sea, float ax, float ay, float w, float h, string label, Color bg, Action onClick)
+    void MapPin(RectTransform sea, float ax, float ay, float w, float h, string label, Color bg, IslandArchetype arch, Action onClick)
     {
         GameObject go = new GameObject("Pin");
         go.transform.SetParent(sea, false);
         Image img = go.AddComponent<Image>();
         img.color = bg;
+        UIStyle.PinIcon(go, arch);
         go.AddComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(ax, ay);
@@ -723,6 +816,7 @@ public class GameUI : MonoBehaviour
         rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = new Vector2(w, h);
+        UIStyle.Frame(holder.transform, w, h);
     }
 
     void PortraitButton(string label, Texture tex, Action onClick)
@@ -748,6 +842,7 @@ public class GameUI : MonoBehaviour
         GameObject b = MkBtnBase(row.transform, 60, Teal);
         LayoutElement bl = b.GetComponent<LayoutElement>();
         bl.flexibleWidth = 1;
+        b.GetComponent<Button>().onClick.AddListener(delegate { Juice.Flash(img); });
         b.GetComponent<Button>().onClick.AddListener(delegate { msg = ""; onClick(); });
         MkBtnText(b, label, 18);
     }

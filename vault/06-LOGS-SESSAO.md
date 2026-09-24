@@ -57,6 +57,13 @@
 - Checkpoint + portable AMD baixados via aria2; hash SHA256 do portable confere com release (563da246…).
 - Extraindo p/ `tools/comfy/` (gitignored). Próximo: modelos p/ checkpoints/loras + `run_amd_gpu` --directml.
 
+## 2026-09-23 — ses_f441bb278ffeK6WjqT2ncewDl3 — DESIGN fixes implementados (skill)
+- Rodado modo DESIGN sobre o review: spec em `vault/09-DESIGN-FIXES.md` (stance, em-jogo, ferido grave, vínculos; T2 farming adiado por falta de evidência).
+- Implementado: `sailStance` + ApplyStance, `grave` + TreatWound + bandagem no retrato, BondEvent na chegada, linha "em jogo" + seletor de ordens no detalhe, botão Tratar na ficha.
+- Curso do usuário: piso RNG explícito (risco ≥0.02, evento ≥0.05 — Cautela não elimina), +Redemoinho (3 escolhas), mares de tempestade (danger≥4 dobra Storm). Piratas/monstros já existiam (UnknownShip/Criatura + combate em ilhas P4+).
+- Verificação: LogicTests 36/36, CHECK-B 0, build 22:22, playtest engine 13/13, smoke limpo.
+- GDD atualizado (§10 eventos + §18 morte). Pendente: commit/push + playtest manual do usuário.
+
 ## 2026-09-23 — ses_f441bb278ffeK6WjqT2ncewDl3 — Lens review da skill `skills/`
 - Rodada skill game-design (Schell) em modo REVIEW sobre crew-journal → `vault/08-LENS-REVIEW.md`.
 - Resultado: 6 perspectivas (A/C/D/F/G/H); 6 tensões, maior risco = permadeath sem apego/causa legível; 3 alternativas (A capitão ativo, B morte em 2 etapas, C vínculos primeiro); protocolo de playtest de 30 min com 6 perguntas (serve o playtest pendente de 04-TAREFAS); questões abertas (balanceamento GED sem sessão real).

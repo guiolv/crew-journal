@@ -22,7 +22,7 @@ namespace CrewJournal.Editor
             {
                 List<string> tr = new List<string>();
                 tr.Add("corajoso");
-                Texture2D t = PortraitRenderer.Render(4242, "char_" + i, jobs[i], tr, i == 4, 0);
+                Texture2D t = PortraitRenderer.Render(4242, "char_" + i, jobs[i], tr, i == 4, 0, i == 4);
                 File.WriteAllBytes(dir + "/portrait_" + jobs[i] + ".png", t.EncodeToPNG());
                 File.WriteAllBytes(dir + "/big_portrait_" + jobs[i] + ".png", Scale4(t).EncodeToPNG());
             }

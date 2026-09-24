@@ -25,12 +25,20 @@ namespace CrewJournal.Logic
 
     public static partial class GameSession
     {
-        public static WeatherKind RollWeather(int seed, int day, int destIdx)
+        public static WeatherKind RollWeather(int seed, int day, int destIdx, int danger)
         {
             int h = Math.Abs(seed * 31 + day * 17 + destIdx * 13) % 10;
+            // Mares de tempestade: destinos perigosos (danger>=4) têm o dobro de chance de Storm.
             if (h <= 5) return WeatherKind.Clear;
+            if (h <= 7) return WeatherKind.Cloudy;
+            if (h == 8 && danger >= 4) return WeatherKind.Storm;
             if (h <= 8) return WeatherKind.Cloudy;
             return WeatherKind.Storm;
+        }
+
+        public static WeatherKind RollWeather(int seed, int day, int destIdx)
+        {
+            return RollWeather(seed, day, destIdx, 1);
         }
 
         public static string WeatherName(WeatherKind w)
@@ -57,6 +65,31 @@ namespace CrewJournal.Logic
             return r;
         }
 
+        public static void ApplyStance(TravelResult r, int stance)
+        {
+            // Regra de design: navegador + ordens REDUZEM o RNG, nunca eliminam.
+            // Piso absoluto: risco 0.02, evento 0.05.
+            if (stance == 1)
+            {
+                r.days += 1;
+                r.risk = Math.Max(0.02f, r.risk * 0.7f);
+                r.eventChance = Math.Max(0.05f, r.eventChance - 0.1f);
+            }
+            else if (stance == 2)
+            {
+                r.days = Math.Max(1, r.days - 1);
+                r.risk = Math.Min(0.9f, r.risk * 1.3f);
+                r.eventChance = Math.Min(0.95f, r.eventChance + 0.1f);
+            }
+        }
+
+        public static string StanceName(int stance)
+        {
+            if (stance == 1) return "Cautela";
+            if (stance == 2) return "Marcha";
+            return "Normal";
+        }
+
         private static int DestIndex(GameData d, string destId)
         {
             for (int i = 0; i < d.world.islands.Count; i++)
@@ -76,8 +109,9 @@ namespace CrewJournal.Logic
             if (to == null) { err = "Destino invalido."; return false; }
             if (from != null && from.id == to.id) { err = "Voce ja esta aqui."; return false; }
             IslandData o = from != null ? from : to;
-            w = RollWeather(d.world.seed, d.world.day, DestIndex(d, destId));
+            w = RollWeather(d.world.seed, d.world.day, DestIndex(d, destId), to.danger);
             calc = PreviewCalc(o, to, d.ship, BestNavigator(d), w);
+            ApplyStance(calc, d.sailStance);
             int crewN = Math.Max(1, AliveCrew(d));
             int needFood = (int)Math.Ceiling(calc.foodCost * crewN * ShipModules.FoodFactor(d.ship));
             int needWater = calc.waterCost * crewN;
@@ -210,9 +244,62 @@ namespace CrewJournal.Logic
                 rep.needCombat = true;
                 rep.combatDanger = Math.Max(to.danger, 3);
             }
+            BondEvent(d, rng, rep);
             rep.days = d.sailTotal;
             rep.message = "Viagem concluida.";
             return rep;
+        }
+
+        public static void BondEvent(GameData d, Random rng, VoyageReport rep)
+        {
+            List<CharacterData> alive = new List<CharacterData>();
+            for (int i = 0; i < d.crew.Count; i++)
+            {
+                if (d.crew[i].alive) alive.Add(d.crew[i]);
+            }
+            if (alive.Count < 2 || rng.NextDouble() > 0.35) return;
+            CharacterData a = alive[rng.Next(alive.Count)];
+            CharacterData b = alive[rng.Next(alive.Count)];
+            if (a.id == b.id) return;
+            RelationshipData rel = null;
+            for (int i = 0; i < d.relations.Count; i++)
+            {
+                RelationshipData r = d.relations[i];
+                if ((r.aId == a.id && r.bId == b.id) || (r.aId == b.id && r.bId == a.id)) rel = r;
+            }
+            if (rel == null)
+            {
+                rel = new RelationshipData();
+                rel.aId = a.id;
+                rel.bId = b.id;
+                rel.affinity = 10;
+                rel.trust = 30;
+                d.relations.Add(rel);
+            }
+            rel.affinity = Math.Min(100, rel.affinity + 8 + rng.Next(8));
+            rel.trust = Math.Min(100, rel.trust + 5);
+            string[] lines = new string[] {
+                " dividiram o turno da noite e conversaram até tarde.",
+                " pescaram juntos ao amanhecer e riram pela primeira vez em dias.",
+                " consertaram uma vela rasgada lado a lado, em silêncio cúmplice."
+            };
+            string txt = a.displayName + " e " + b.displayName + lines[rng.Next(lines.Length)];
+            AddJournal(d, txt);
+            rep.log.Add(txt);
+        }
+
+        public static bool TreatWound(GameData d, string charId, out string msg)
+        {
+            CharacterData c = FindChar(d, charId);
+            if (c == null || !c.alive) { msg = "Tripulante indisponível."; return false; }
+            if (!c.grave) { msg = "Sem ferimentos graves."; return false; }
+            if (d.GetResource(ResourceId.Medicine) < 1) { msg = "Precisa de 1 medicina."; return false; }
+            d.AddResource(ResourceId.Medicine, -1);
+            c.grave = false;
+            c.stats.hp = Math.Max(c.stats.hp, c.stats.maxHp / 2);
+            AddJournal(d, c.displayName + " foi tratado e deixou de estar em estado grave.");
+            msg = c.displayName + " tratado!";
+            return true;
         }
 
         // Fase final de combate compartilhada (auto ou por turnos).

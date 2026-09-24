@@ -32,6 +32,13 @@ public static class LogicTests
         TravelResult t2 = NavigationSystem.Calculate(a, b, g1.ship, 50, b.danger);
         Check(t1.days == t2.days && Math.Abs(t1.risk - t2.risk) < 0.0001f, "nav-deterministic");
         Check(t1.days >= 1 && t1.risk >= 0.02f && t1.risk <= 0.85f, "nav-bounds");
+        // Regra de design: navegador 99 + cautela REDUZEM, nunca eliminam o RNG.
+        TravelResult tmax = NavigationSystem.Calculate(a, b, g1.ship, 99, b.danger);
+        GameSession.ApplyStance(tmax, 1);
+        Check(tmax.risk >= 0.02f && tmax.eventChance >= 0.05f, "nav-floor");
+        TravelResult tmarch = NavigationSystem.Calculate(a, b, g1.ship, 10, b.danger);
+        GameSession.ApplyStance(tmarch, 2);
+        Check(tmarch.risk > tmax.risk, "stance-tradeoff");
 
         // 3. Character valido
         CharacterData c = CharacterGenerator.Generate(42, 5);
@@ -88,6 +95,13 @@ public static class LogicTests
         WeatherKind wa = GameSession.RollWeather(42, 5, 2);
         WeatherKind wb = GameSession.RollWeather(42, 5, 2);
         Check(wa == wb, "weather-deterministic");
+        int stormCalm = 0, stormWild = 0;
+        for (int i = 0; i < 200; i++)
+        {
+            if (GameSession.RollWeather(i, i * 3, i * 7, 1) == WeatherKind.Storm) stormCalm++;
+            if (GameSession.RollWeather(i, i * 3, i * 7, 5) == WeatherKind.Storm) stormWild++;
+        }
+        Check(stormWild > stormCalm, "weather-storm-bias");
 
         // 11. Voyage completo: preview -> begin -> ticks -> chegada
         GameData g9 = GameSession.NewGame(31);
@@ -125,7 +139,7 @@ public static class LogicTests
         // 12. Escolhas de evento executam sem erro
         GameData g10 = GameSession.NewGame(77);
         bool chOk = true;
-        TravelEventKind[] kinds = new TravelEventKind[] { TravelEventKind.Storm, TravelEventKind.AbandonedShip, TravelEventKind.UnknownShip, TravelEventKind.SeaCreature };
+        TravelEventKind[] kinds = new TravelEventKind[] { TravelEventKind.Storm, TravelEventKind.AbandonedShip, TravelEventKind.UnknownShip, TravelEventKind.SeaCreature, TravelEventKind.Whirlpool };
         for (int k = 0; k < kinds.Length; k++)
         {
             for (int o = 0; o < 3; o++)
@@ -180,6 +194,39 @@ public static class LogicTests
         CharacterData cx = CharacterGenerator.Generate(5, 3);
         int ups = Progression.AddXp(cx, 250);
         Check(ups >= 1 && cx.level >= 2, "xp-levelup");
+
+        // Ferido grave: primeiro golpe letal derruba p/ 1 HP, não mata.
+        GameData g12 = GameSession.NewGame(200);
+        CharacterData hero = g12.crew[0];
+        hero.stats.hp = 3;
+        List<CharacterData> gp = new List<CharacterData>();
+        gp.Add(hero);
+        List<EnemyData> ge = CombatSystem.GenerateEnemies(999, 5, 1);
+        BattleState bst = BattleState.Start(gp, ge, 0, 0, 4242);
+        int guardb = 0;
+        while (!bst.over && guardb < 200)
+        {
+            guardb++;
+            if (bst.CurrentCrew() == null) break;
+            bst.Act(BattleAction.Defend, 0);
+        }
+        Check(bst.over && hero.grave, "grave-first");
+        g12.AddResource(ResourceId.Medicine, 1);
+        string tmsg;
+        bool treated = hero.alive ? GameSession.TreatWound(g12, hero.id, out tmsg) : false;
+        Check(!hero.alive || (treated && !hero.grave), "grave-treat");
+
+        // Vínculos: evento de chegada não quebra e pode criar/aprofundar relação.
+        GameData g13 = GameSession.NewGame(300);
+        g13.AddResource(ResourceId.Money, 5000);
+        string rc, bs2;
+        GameSession.BuyShip(g13, "boat", out bs2);
+        GameSession.Recruit(g13, g13.roster[0].id, out rc);
+        VoyageReport dummy = new VoyageReport();
+        int rel0 = g13.relations.Count;
+        int j0 = g13.journal.Count;
+        GameSession.BondEvent(g13, new Random(7), dummy);
+        Check(g13.journal.Count >= j0, "bond-safe");
 
         // 16. DNA visual deterministico
         List<string> traits = new List<string>();

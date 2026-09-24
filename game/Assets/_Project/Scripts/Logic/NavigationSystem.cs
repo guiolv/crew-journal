@@ -51,10 +51,11 @@ namespace CrewJournal.Logic
                 return TravelEventKind.None;
             }
             double v = rng.NextDouble();
-            if (v < 0.25) return TravelEventKind.Storm;
-            if (v < 0.45) return TravelEventKind.AbandonedShip;
-            if (v < 0.65) return TravelEventKind.UnknownShip;
-            if (v < 0.85) return TravelEventKind.SeaCreature;
+            if (v < 0.22) return TravelEventKind.Storm;
+            if (v < 0.40) return TravelEventKind.AbandonedShip;
+            if (v < 0.58) return TravelEventKind.UnknownShip;
+            if (v < 0.75) return TravelEventKind.SeaCreature;
+            if (v < 0.90) return TravelEventKind.Whirlpool;
             return TravelEventKind.CalmBonus;
         }
     }
