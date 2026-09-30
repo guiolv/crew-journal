@@ -1,6 +1,7 @@
 # 04 — Tarefas
 
 ## Em progresso
+- [ ] SPEC-ISLAND-CJ (SDD, RED): spec em `game/Assets/Procedural/SPEC-ISLAND-CJ.md` + contrato `Logic/IslandLayout.cs` (NotImplemented) + `Tools/LogicTests/IslandEvals.cs` (7 evals). Verificado: evals compilam e reportam BLOCKED; suite principal 38/38 verde; `IslandRenderer.cs` intacto. Próximo: implementar `Generate` até 7/7 verde.
 - [x] Áudio (sessão atual): `Treasure Map` como `music_map` em loop + `Music.cs` (mapa/combate) + override de SFX por arquivo; 15/15, build + smoke limpos
 - [x] Assets das sheets no jogo: 37 PNGs fatiados + ArtPostprocessor + topbar com chips; build 00:52 empacotado; aguardando confirmação visual/auditiva do usuário
 - [ ] Mapa com ilhas desenhadas + nome abaixo (sessão atual): MapIsland no lugar do MapPin — build em curso, falta screenshot do usuário

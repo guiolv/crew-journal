@@ -130,3 +130,9 @@
 
 ## 2026-09-24 - ses_f441bb278ffeK6WjqT2ncewDl3 - Layout clean: sem barra de botoes
 - Barra inferior oculta (SetActive false, reversivel); viewport estendido; log movido p/ base; botao '...' 44px abre Menu. Screenshot proprio confirma.
+
+## 2026-09-30 - ses_f441bb278ffeK6WjqT2ncewDl3 - Leitura library AI System Engineering v2.4.0
+- PDF lido integralmente (8 pgs, System Architecture Group): paradigma prompt->harness+loop, taxonomia, SDD, evals, lab SPEC-ISLAND-001 com falloff+adjacencia+spawn. Mapeado contra TileCatalog/IslandRenderer; proximo passo a definir com usuario.
+
+## 2026-09-30 - ses_f441bb278ffeK6WjqT2ncewDl3 - SPEC-ISLAND-CJ RED (opcao 1)
+- Spec SDD em game/Assets/Procedural/SPEC-ISLAND-CJ.md (R1-R6, I1-I5, DoD) + contrato Logic/IslandLayout.cs (stub) + IslandEvals.cs (7 evals, harness separado). Verificacao: csc 0 erros; IslandEvals BLOCKED exit 1 (RED honesto); LogicTests 38/38 verde; IslandRenderer.cs diff vazio. Renderer adocao fica p/ fase posterior.
